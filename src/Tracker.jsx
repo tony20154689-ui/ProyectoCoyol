@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import { storage } from "./firebase.js";
 
 const ESTADOS = ["Pendiente", "En Proceso", "Completado", "Bloqueado", "N/A"];
 const PRIORIDADES = ["Alta", "Media", "Baja"];
@@ -248,16 +250,56 @@ const FilesModal = ({ archivos, onChange, onClose, title }) => {
   const [view, setView] = useState("list");
   const [renaming, setRenaming] = useState(null);
   const [renameVal, setRenameVal] = useState("");
+  const [uploads, setUploads] = useState({});
 
-  const addFiles = (filesList) => {
+  const sanitize = (s) => s.replace(/[^a-zA-Z0-9._-]/g, "_");
+
+  const uploadOne = (file) => new Promise((resolve, reject) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const path = `attachments/${id}-${sanitize(file.name)}`;
+    const sref = storageRef(storage, path);
+    const task = uploadBytesResumable(sref, file);
+    setUploads(prev => ({ ...prev, [id]: { name: file.name, progress: 0 } }));
+    task.on("state_changed",
+      (snap) => {
+        const progress = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+        setUploads(prev => ({ ...prev, [id]: { name: file.name, progress } }));
+      },
+      (err) => {
+        setUploads(prev => { const n = { ...prev }; delete n[id]; return n; });
+        reject(err);
+      },
+      async () => {
+        try {
+          const url = await getDownloadURL(task.snapshot.ref);
+          setUploads(prev => { const n = { ...prev }; delete n[id]; return n; });
+          resolve({ name: file.name, size: file.size, type: file.type, url, path, ts: Date.now() });
+        } catch (err) { reject(err); }
+      }
+    );
+  });
+
+  const addFiles = async (filesList) => {
     const files = Array.from(filesList || []);
     if (!files.length) return;
-    const newFiles = files.map(f => ({ name: f.name, size: f.size, type: f.type, url: URL.createObjectURL(f), ts: Date.now() }));
-    onChange([...archivos, ...newFiles]);
+    try {
+      const results = await Promise.all(files.map(uploadOne));
+      onChange([...archivos, ...results]);
+    } catch (err) {
+      alert("Error al subir archivo(s): " + (err?.message || err));
+    }
   };
   const onPick = (e) => { addFiles(e.target.files); e.target.value = ""; };
   const onDrop = (e) => { e.preventDefault(); addFiles(e.dataTransfer.files); };
-  const remove = (idx) => { if (confirm("¿Eliminar este archivo?")) onChange(archivos.filter((_, i) => i !== idx)); };
+  const remove = async (idx) => {
+    if (!confirm("¿Eliminar este archivo?")) return;
+    const f = archivos[idx];
+    if (f?.path) {
+      try { await deleteObject(storageRef(storage, f.path)); }
+      catch (err) { console.warn("No se pudo borrar de Storage:", err.message); }
+    }
+    onChange(archivos.filter((_, i) => i !== idx));
+  };
   const openFile = (f) => { const w = window.open(f.url, "_blank"); if (!w) { const a = document.createElement("a"); a.href = f.url; a.download = f.name; a.click(); } };
   const startRename = (i, name) => { setRenaming(i); setRenameVal(name); };
   const saveRename = () => {
@@ -312,6 +354,22 @@ const FilesModal = ({ archivos, onChange, onClose, title }) => {
 
         {/* Content */}
         <div onDragOver={(e) => e.preventDefault()} onDrop={onDrop} style={{ flex: 1, overflow: "auto", padding: 20, background: "#f8fafc" }}>
+          {Object.keys(uploads).length > 0 && (
+            <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 10, padding: "10px 14px", marginBottom: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#1e40af", marginBottom: 6 }}>Subiendo {Object.keys(uploads).length} archivo(s)…</div>
+              {Object.entries(uploads).map(([id, u]) => (
+                <div key={id} style={{ marginBottom: 4 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#1e40af", marginBottom: 2 }}>
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{u.name}</span>
+                    <span style={{ fontFamily: "'DM Mono', monospace" }}>{u.progress}%</span>
+                  </div>
+                  <div style={{ height: 4, background: "#dbeafe", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${u.progress}%`, background: "#2563eb", transition: "width 0.2s" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           {archivos.length === 0 ? (
             <div style={{ textAlign: "center", padding: "60px 20px", color: "#94a3b8" }}>
               <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.5 }}>📁</div>
@@ -492,7 +550,7 @@ const TaskRow = ({ t, i, onUpdate, onDelete }) => {
   );
 };
 
-const ResumenView = ({ data, isMobile }) => {
+const ResumenView = ({ data, isMobile, onSelectFrente }) => {
   const gs = FRENTES.map(f => ({ ...f, stats: getFrente(f.id, data) }));
   const comp = gs.filter(f => f.stats.estado === "Completado").length;
   const proc = gs.filter(f => f.stats.estado === "En Proceso").length;
@@ -516,7 +574,7 @@ const ResumenView = ({ data, isMobile }) => {
         <ProgressBar value={avg} h={10} />
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        {gs.map(f => (<div key={f.id} style={{ background: "#fff", borderRadius: 10, padding: isMobile ? "10px 10px" : "12px 16px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 12, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        {gs.map(f => (<div key={f.id} onClick={() => onSelectFrente && onSelectFrente(f.id)} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateX(2px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(3,105,161,0.12)"; e.currentTarget.style.background = "#f0f9ff"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 1px 2px rgba(0,0,0,0.04)"; e.currentTarget.style.background = "#fff"; }} style={{ background: "#fff", borderRadius: 10, padding: isMobile ? "10px 10px" : "12px 16px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 12, boxShadow: "0 1px 2px rgba(0,0,0,0.04)", cursor: "pointer", transition: "all 0.15s" }}>
           <span style={{ fontSize: isMobile ? 16 : 20, flexShrink: 0 }}>{f.icon}</span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: "#0f172a" }}>{f.name}</div>
@@ -524,6 +582,7 @@ const ResumenView = ({ data, isMobile }) => {
           </div>
           {!isMobile && <Badge type="estado" value={f.stats.estado} />}
           <div style={{ minWidth: isMobile ? 80 : 140 }}><ProgressBar value={f.stats.avance} h={6} /></div>
+          <span style={{ fontSize: 14, color: "#cbd5e1", flexShrink: 0 }}>›</span>
         </div>))}
       </div>
     </div>
@@ -606,8 +665,10 @@ const BitacoraView = ({ data, setData, isMobile }) => {
   );
 };
 
-const SeguimientoView = ({ data, setData, isMobile }) => {
-  const [sub, setSub] = useState(FRENTES[0].id);
+const SeguimientoView = ({ data, setData, isMobile, sub: subProp, setSub: setSubProp }) => {
+  const [subInternal, setSubInternal] = useState(FRENTES[0].id);
+  const sub = subProp ?? subInternal;
+  const setSub = setSubProp ?? setSubInternal;
   const subTabs = [...FRENTES.map(f => ({ id: f.id, icon: f.icon, label: isMobile ? f.short : f.name })), { id: "bitacora", icon: "📅", label: isMobile ? "Bitác." : "Bitácora" }];
   return (
     <div>
@@ -950,12 +1011,14 @@ export default function Tracker({ data, setData, user, onLogout }) {
   const isMobile = useIsMobile();
   const importRef = useRef();
   const [section, setSection] = useState("resumen");
+  const [seguimientoSub, setSeguimientoSub] = useState(FRENTES[0].id);
   const [toast, setToast] = useState("");
+  const goToFrente = (id) => { setSeguimientoSub(id); setSection("seguimiento"); };
   const resetData = () => { if (confirm("¿Restablecer datos originales? Esto sobrescribe lo guardado en la nube.")) setData(initialData()); };
 
   const exportData = () => {
     const clean = JSON.parse(JSON.stringify(data));
-    const strip = (obj) => { if (Array.isArray(obj)) return obj.map(strip); if (obj && typeof obj === "object") { const n = {}; for (const [k,v] of Object.entries(obj)) { if (k === "archivos" || k === "comprobante") { n[k] = (v||[]).map(f => ({ name: f.name, size: f.size, type: f.type, ts: f.ts })); } else { n[k] = strip(v); } } return n; } return obj; };
+    const strip = (obj) => { if (Array.isArray(obj)) return obj.map(strip); if (obj && typeof obj === "object") { const n = {}; for (const [k,v] of Object.entries(obj)) { if (k === "archivos" || k === "comprobante") { n[k] = (v||[]).map(f => ({ name: f.name, size: f.size, type: f.type, ts: f.ts, url: f.url, path: f.path })); } else { n[k] = strip(v); } } return n; } return obj; };
     const exported = strip(clean);
     const blob = new Blob([JSON.stringify(exported, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -1037,8 +1100,8 @@ export default function Tracker({ data, setData, user, onLogout }) {
           )}
         </header>
         <div style={{ padding: isMobile ? "12px 10px" : "24px 28px", maxWidth: 1400 }}>
-          {section === "resumen" && <ResumenView data={data} isMobile={isMobile} />}
-          {section === "seguimiento" && <SeguimientoView data={data} setData={setData} isMobile={isMobile} />}
+          {section === "resumen" && <ResumenView data={data} isMobile={isMobile} onSelectFrente={goToFrente} />}
+          {section === "seguimiento" && <SeguimientoView data={data} setData={setData} isMobile={isMobile} sub={seguimientoSub} setSub={setSeguimientoSub} />}
           {section === "maestros" && <MaestrosView data={data} setData={setData} isMobile={isMobile} />}
           {section === "clientes" && <ClientesView data={data} setData={setData} isMobile={isMobile} />}
         </div>
