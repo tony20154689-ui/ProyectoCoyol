@@ -300,7 +300,10 @@ const FilesModal = ({ archivos, onChange, onClose, title }) => {
     }
     onChange(archivos.filter((_, i) => i !== idx));
   };
-  const fileLinkProps = (f) => ({ href: f.url || "#", target: "_blank", rel: "noopener noreferrer" });
+  const isBroken = (f) => !f.url || f.url.startsWith("blob:") || (!f.path && !f.url.startsWith("http"));
+  const fileLinkProps = (f) => isBroken(f)
+    ? { href: "#", onClick: (e) => { e.preventDefault(); alert("⚠️ Este archivo se subió antes de la actualización a Firebase Storage y ya no se puede abrir.\n\nPor favor, eliminalo y volvelo a subir."); } }
+    : { href: f.url, target: "_blank", rel: "noopener noreferrer" };
   const startRename = (i, name) => { setRenaming(i); setRenameVal(name); };
   const saveRename = () => {
     if (renaming === null) return;
@@ -404,7 +407,7 @@ const FilesModal = ({ archivos, onChange, onClose, title }) => {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {filtered.map((f) => (
-                <div key={f._idx} style={{ background: "#fff", borderRadius: 10, border: "1px solid #e2e8f0", padding: "10px 12px", display: "flex", alignItems: "center", gap: 12 }}>
+                <div key={f._idx} style={{ background: isBroken(f) ? "#fffbeb" : "#fff", borderRadius: 10, border: isBroken(f) ? "1px solid #fde68a" : "1px solid #e2e8f0", padding: "10px 12px", display: "flex", alignItems: "center", gap: 12 }}>
                   <a {...fileLinkProps(f)} style={{ width: 44, height: 44, background: "#f1f5f9", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "pointer", overflow: "hidden", textDecoration: "none" }}>
                     {isImage(f.name) && f.url
                       ? <img src={f.url} alt={f.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -418,10 +421,11 @@ const FilesModal = ({ archivos, onChange, onClose, title }) => {
                       </div>
                     ) : (
                       <>
-                        <a {...fileLinkProps(f)} title={f.name} style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#0369a1", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2, textDecoration: "none" }}>{f.name}</a>
+                        <a {...fileLinkProps(f)} title={f.name} style={{ display: "block", fontSize: 13, fontWeight: 600, color: isBroken(f) ? "#92400e" : "#0369a1", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2, textDecoration: "none" }}>{isBroken(f) ? "⚠️ " : ""}{f.name}</a>
                         <div style={{ fontSize: 10, color: "#94a3b8", display: "flex", gap: 10 }}>
                           <span>📅 {fmtDate(f.ts)}</span>
                           <span>📦 {fmtBytes(f.size)}</span>
+                          {isBroken(f) && <span style={{ color: "#92400e", fontWeight: 600 }}>· Re-subir</span>}
                         </div>
                       </>
                     )}
