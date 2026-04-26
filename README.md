@@ -1,6 +1,6 @@
 # Proyecto Coyol — Tablero de Seguimiento
 
-Aplicación React (Vite) para el seguimiento del proyecto **Bodegas Coyol** (Grupo ZEN · Ganadera Santa Leonor S.A.). Datos persistidos en **Cloud Firestore**, autenticación con **Firebase Auth** (email + contraseña), hospedada en **Firebase Hosting**.
+Aplicación React (Vite) para el seguimiento del proyecto **Bodegas Coyol** (Grupo ZEN · Ganadera San Lorenzo, S.A.). Datos persistidos en **Cloud Firestore**, autenticación con **Firebase Auth** (email + contraseña), hospedada en **Firebase Hosting**.
 
 ## Comandos
 

@@ -104,7 +104,7 @@ export default function Login() {
               Bodegas<br />Coyol
             </h1>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.78)", lineHeight: 1.55, maxWidth: 280 }}>
-              Plataforma central de coordinación entre <strong style={{ color: "#fff" }}>Grupo ZEN</strong> y <strong style={{ color: "#fff" }}>Deindustrial</strong> para el desarrollo del proyecto Ganadera Santa Leonor S.A.
+              Plataforma central de coordinación entre <strong style={{ color: "#fff" }}>Grupo ZEN</strong> y <strong style={{ color: "#fff" }}>Deindustrial</strong> para el desarrollo del proyecto Ganadera San Lorenzo, S.A.
             </p>
           </div>
           <div style={{ position: "relative", zIndex: 1, fontSize: 10, color: "rgba(255,255,255,0.55)", letterSpacing: 1, fontFamily: "'DM Mono', monospace" }}>

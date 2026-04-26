@@ -605,7 +605,7 @@ const FrenteView = ({ frenteId, data, setData, isMobile }) => {
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
         <span style={{ fontSize: isMobile ? 20 : 24 }}>{frente.icon}</span>
-        <div><h2 style={{ margin: 0, fontSize: isMobile ? 14 : 17, fontWeight: 800, color: "#0f172a" }}>{isMobile ? frente.name : frente.full}</h2><p style={{ margin: 0, fontSize: 10, color: "#94a3b8" }}>Grupo ZEN / Ganadera Santa Leonor S.A.</p></div>
+        <div><h2 style={{ margin: 0, fontSize: isMobile ? 14 : 17, fontWeight: 800, color: "#0f172a" }}>{isMobile ? frente.name : frente.full}</h2><p style={{ margin: 0, fontSize: 10, color: "#94a3b8" }}>Grupo ZEN / Ganadera San Lorenzo, S.A.</p></div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 12 }}>
         {kpis.map(k => (<div key={k.l} style={{ background: "#fff", borderRadius: 8, padding: "6px 4px", textAlign: "center", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
@@ -1098,7 +1098,7 @@ export default function Tracker({ data, setData, user, onLogout }) {
             </div>
           ) : (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div><h1 style={{ fontSize: 16, fontWeight: 800, color: "#0c4a6e", fontFamily: "'Outfit', sans-serif", margin: 0 }}>{navItems.find(n=>n.id===section)?.icon} {navItems.find(n=>n.id===section)?.label}</h1><p style={{ fontSize: 11, color: "#94a3b8", margin: "2px 0 0" }}>Proyecto Bodegas Coyol · Grupo ZEN · Ganadera Santa Leonor S.A.</p></div>
+              <div><h1 style={{ fontSize: 16, fontWeight: 800, color: "#0c4a6e", fontFamily: "'Outfit', sans-serif", margin: 0 }}>{navItems.find(n=>n.id===section)?.icon} {navItems.find(n=>n.id===section)?.label}</h1><p style={{ fontSize: 11, color: "#94a3b8", margin: "2px 0 0" }}>Proyecto Bodegas Coyol · Grupo ZEN · Ganadera San Lorenzo, S.A.</p></div>
               <div style={{ fontSize: 11, color: "#94a3b8", fontFamily: "'DM Mono', monospace" }}>{new Date().toLocaleDateString("es-CR", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</div>
             </div>
           )}
