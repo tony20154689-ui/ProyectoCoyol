@@ -300,7 +300,7 @@ const FilesModal = ({ archivos, onChange, onClose, title }) => {
     }
     onChange(archivos.filter((_, i) => i !== idx));
   };
-  const openFile = (f) => { const w = window.open(f.url, "_blank"); if (!w) { const a = document.createElement("a"); a.href = f.url; a.download = f.name; a.click(); } };
+  const fileLinkProps = (f) => ({ href: f.url || "#", target: "_blank", rel: "noopener noreferrer" });
   const startRename = (i, name) => { setRenaming(i); setRenameVal(name); };
   const saveRename = () => {
     if (renaming === null) return;
@@ -382,18 +382,18 @@ const FilesModal = ({ archivos, onChange, onClose, title }) => {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 12 }}>
               {filtered.map((f) => (
                 <div key={f._idx} style={{ background: "#fff", borderRadius: 10, border: "1px solid #e2e8f0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                  <div onClick={() => openFile(f)} style={{ height: 100, background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", overflow: "hidden" }}>
+                  <a {...fileLinkProps(f)} style={{ height: 100, background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", overflow: "hidden", textDecoration: "none" }}>
                     {isImage(f.name) && f.url
                       ? <img src={f.url} alt={f.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       : <span style={{ fontSize: 38 }}>{fileIcon(f.name)}</span>}
-                  </div>
+                  </a>
                   <div style={{ padding: "8px 10px", flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
                     <div title={f.name} style={{ fontSize: 11, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</div>
                     <div style={{ fontSize: 9, color: "#94a3b8", display: "flex", justifyContent: "space-between" }}>
                       <span>{fmtDate(f.ts)}</span><span>{fmtBytes(f.size)}</span>
                     </div>
                     <div style={{ display: "flex", gap: 4, marginTop: 2 }}>
-                      <button onClick={() => openFile(f)} style={{ flex: 1, background: "#e0f2fe", color: "#0369a1", border: "none", borderRadius: 5, padding: "4px", fontSize: 10, fontWeight: 600, cursor: "pointer" }}>Abrir</button>
+                      <a {...fileLinkProps(f)} style={{ flex: 1, background: "#e0f2fe", color: "#0369a1", border: "none", borderRadius: 5, padding: "4px", fontSize: 10, fontWeight: 600, cursor: "pointer", textAlign: "center", textDecoration: "none", lineHeight: "16px" }}>Abrir</a>
                       <button onClick={() => startRename(f._idx, f.name)} title="Renombrar" style={{ background: "#fef3c7", color: "#92400e", border: "none", borderRadius: 5, padding: "4px 6px", fontSize: 10, cursor: "pointer" }}>✎</button>
                       <button onClick={() => remove(f._idx)} title="Eliminar" style={{ background: "#fee2e2", color: "#991b1b", border: "none", borderRadius: 5, padding: "4px 6px", fontSize: 10, cursor: "pointer" }}>🗑</button>
                     </div>
@@ -405,11 +405,11 @@ const FilesModal = ({ archivos, onChange, onClose, title }) => {
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {filtered.map((f) => (
                 <div key={f._idx} style={{ background: "#fff", borderRadius: 10, border: "1px solid #e2e8f0", padding: "10px 12px", display: "flex", alignItems: "center", gap: 12 }}>
-                  <div onClick={() => openFile(f)} style={{ width: 44, height: 44, background: "#f1f5f9", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "pointer", overflow: "hidden" }}>
+                  <a {...fileLinkProps(f)} style={{ width: 44, height: 44, background: "#f1f5f9", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "pointer", overflow: "hidden", textDecoration: "none" }}>
                     {isImage(f.name) && f.url
                       ? <img src={f.url} alt={f.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       : <span style={{ fontSize: 22 }}>{fileIcon(f.name)}</span>}
-                  </div>
+                  </a>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {renaming === f._idx ? (
                       <div style={{ display: "flex", gap: 4 }}>
@@ -418,7 +418,7 @@ const FilesModal = ({ archivos, onChange, onClose, title }) => {
                       </div>
                     ) : (
                       <>
-                        <div onClick={() => openFile(f)} title={f.name} style={{ fontSize: 13, fontWeight: 600, color: "#0369a1", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2 }}>{f.name}</div>
+                        <a {...fileLinkProps(f)} title={f.name} style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#0369a1", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2, textDecoration: "none" }}>{f.name}</a>
                         <div style={{ fontSize: 10, color: "#94a3b8", display: "flex", gap: 10 }}>
                           <span>📅 {fmtDate(f.ts)}</span>
                           <span>📦 {fmtBytes(f.size)}</span>
@@ -428,7 +428,7 @@ const FilesModal = ({ archivos, onChange, onClose, title }) => {
                   </div>
                   {renaming !== f._idx && (
                     <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                      <button onClick={() => openFile(f)} title="Abrir" style={{ background: "#e0f2fe", color: "#0369a1", border: "none", borderRadius: 6, padding: "6px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Abrir</button>
+                      <a {...fileLinkProps(f)} title="Abrir" style={{ background: "#e0f2fe", color: "#0369a1", border: "none", borderRadius: 6, padding: "6px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer", textDecoration: "none" }}>Abrir</a>
                       <button onClick={() => startRename(f._idx, f.name)} title="Renombrar" style={{ background: "#fef3c7", color: "#92400e", border: "none", borderRadius: 6, padding: "6px 8px", fontSize: 11, cursor: "pointer" }}>✎</button>
                       <button onClick={() => remove(f._idx)} title="Eliminar" style={{ background: "#fee2e2", color: "#991b1b", border: "none", borderRadius: 6, padding: "6px 8px", fontSize: 11, cursor: "pointer" }}>🗑</button>
                     </div>
@@ -574,7 +574,7 @@ const ResumenView = ({ data, isMobile, onSelectFrente }) => {
         <ProgressBar value={avg} h={10} />
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        {gs.map(f => (<div key={f.id} onClick={() => onSelectFrente && onSelectFrente(f.id)} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateX(2px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(3,105,161,0.12)"; e.currentTarget.style.background = "#f0f9ff"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 1px 2px rgba(0,0,0,0.04)"; e.currentTarget.style.background = "#fff"; }} style={{ background: "#fff", borderRadius: 10, padding: isMobile ? "10px 10px" : "12px 16px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 12, boxShadow: "0 1px 2px rgba(0,0,0,0.04)", cursor: "pointer", transition: "all 0.15s" }}>
+        {gs.map(f => (<div key={f.id} role="button" tabIndex={0} onClick={() => onSelectFrente && onSelectFrente(f.id)} {...(!isMobile ? { onMouseEnter: (e) => { e.currentTarget.style.transform = "translateX(2px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(3,105,161,0.12)"; e.currentTarget.style.background = "#f0f9ff"; }, onMouseLeave: (e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 1px 2px rgba(0,0,0,0.04)"; e.currentTarget.style.background = "#fff"; } } : {})} style={{ background: "#fff", borderRadius: 10, padding: isMobile ? "10px 10px" : "12px 16px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 12, boxShadow: "0 1px 2px rgba(0,0,0,0.04)", cursor: "pointer", transition: "all 0.15s", WebkitTapHighlightColor: "rgba(3,105,161,0.15)" }}>
           <span style={{ fontSize: isMobile ? 16 : 20, flexShrink: 0 }}>{f.icon}</span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: "#0f172a" }}>{f.name}</div>
