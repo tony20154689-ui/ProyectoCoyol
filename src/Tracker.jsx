@@ -237,38 +237,172 @@ const fileIcon = (name) => {
   return "📎";
 };
 
-const FileAttachments = ({ archivos = [], onChange }) => {
+const fmtBytes = (b) => { if (!b && b !== 0) return ""; if (b < 1024) return b + " B"; if (b < 1024*1024) return (b/1024).toFixed(1) + " KB"; return (b/1024/1024).toFixed(1) + " MB"; };
+const fmtDate = (ts) => { if (!ts) return ""; const d = new Date(ts); return d.toLocaleDateString("es-CR", { day: "2-digit", month: "short", year: "numeric" }); };
+const isImage = (name = "") => /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(name);
+
+const FilesModal = ({ archivos, onChange, onClose, title }) => {
   const ref = useRef();
-  const addFiles = (e) => {
-    const files = Array.from(e.target.files);
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("newest");
+  const [view, setView] = useState("list");
+  const [renaming, setRenaming] = useState(null);
+  const [renameVal, setRenameVal] = useState("");
+
+  const addFiles = (filesList) => {
+    const files = Array.from(filesList || []);
+    if (!files.length) return;
     const newFiles = files.map(f => ({ name: f.name, size: f.size, type: f.type, url: URL.createObjectURL(f), ts: Date.now() }));
     onChange([...archivos, ...newFiles]);
-    e.target.value = "";
   };
-  const remove = (idx) => onChange(archivos.filter((_, i) => i !== idx));
+  const onPick = (e) => { addFiles(e.target.files); e.target.value = ""; };
+  const onDrop = (e) => { e.preventDefault(); addFiles(e.dataTransfer.files); };
+  const remove = (idx) => { if (confirm("¿Eliminar este archivo?")) onChange(archivos.filter((_, i) => i !== idx)); };
   const openFile = (f) => { const w = window.open(f.url, "_blank"); if (!w) { const a = document.createElement("a"); a.href = f.url; a.download = f.name; a.click(); } };
+  const startRename = (i, name) => { setRenaming(i); setRenameVal(name); };
+  const saveRename = () => {
+    if (renaming === null) return;
+    const trimmed = renameVal.trim();
+    if (trimmed) onChange(archivos.map((f, i) => i === renaming ? { ...f, name: trimmed } : f));
+    setRenaming(null); setRenameVal("");
+  };
+
+  const filtered = archivos
+    .map((f, idx) => ({ ...f, _idx: idx }))
+    .filter(f => !search || f.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      if (sort === "newest") return (b.ts || 0) - (a.ts || 0);
+      if (sort === "oldest") return (a.ts || 0) - (b.ts || 0);
+      if (sort === "name") return a.name.localeCompare(b.name);
+      if (sort === "size") return (b.size || 0) - (a.size || 0);
+      return 0;
+    });
 
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: archivos.length ? 6 : 0 }}>
-        <button onClick={() => ref.current?.click()} style={{ background: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd", borderRadius: 6, padding: "5px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-          📎 Adjuntar
-        </button>
-        <input ref={ref} type="file" multiple accept="image/*,.pdf,.xlsx,.xls,.csv,.doc,.docx" onChange={addFiles} style={{ display: "none" }} />
-        {archivos.length > 0 && <span style={{ fontSize: 10, color: "#64748b" }}>{archivos.length} archivo(s)</span>}
-      </div>
-      {archivos.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          {archivos.map((f, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, background: "#f0f9ff", borderRadius: 6, padding: "4px 8px", border: "1px solid #e0f2fe" }}>
-              <span style={{ fontSize: 14 }}>{fileIcon(f.name)}</span>
-              <span onClick={() => openFile(f)} style={{ flex: 1, fontSize: 11, color: "#0369a1", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecoration: "underline" }}>{f.name}</span>
-              <button onClick={() => remove(i)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: 12, padding: 2 }}>✕</button>
-            </div>
-          ))}
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", backdropFilter: "blur(4px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 760, maxHeight: "90vh", display: "flex", flexDirection: "column", boxShadow: "0 25px 60px rgba(0,0,0,0.3)" }}>
+        {/* Header */}
+        <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ fontSize: 20 }}>📎</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", fontFamily: "'Outfit', sans-serif" }}>Archivos adjuntos</div>
+            <div style={{ fontSize: 11, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title || ""} · {archivos.length} archivo(s)</div>
+          </div>
+          <button onClick={onClose} style={{ background: "#f1f5f9", border: "none", borderRadius: 8, width: 32, height: 32, fontSize: 16, cursor: "pointer", color: "#64748b" }}>✕</button>
         </div>
-      )}
+
+        {/* Toolbar */}
+        <div style={{ padding: "12px 20px", borderBottom: "1px solid #e2e8f0", display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+          <button onClick={() => ref.current?.click()} style={{ background: "linear-gradient(135deg, #0369a1, #0284c7)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+            ＋ Subir archivos
+          </button>
+          <input ref={ref} type="file" multiple accept="image/*,.pdf,.xlsx,.xls,.csv,.doc,.docx,.txt,.zip" onChange={onPick} style={{ display: "none" }} />
+          <input type="text" placeholder="Buscar por nombre…" value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 140, padding: "7px 10px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 12, outline: "none" }} />
+          <select value={sort} onChange={(e) => setSort(e.target.value)} style={{ padding: "7px 10px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 12, background: "#fff", cursor: "pointer" }}>
+            <option value="newest">Más recientes</option>
+            <option value="oldest">Más antiguos</option>
+            <option value="name">Nombre A-Z</option>
+            <option value="size">Tamaño</option>
+          </select>
+          <div style={{ display: "flex", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
+            <button onClick={() => setView("list")} title="Lista" style={{ background: view === "list" ? "#e0f2fe" : "#fff", color: view === "list" ? "#0369a1" : "#64748b", border: "none", padding: "7px 10px", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>☰</button>
+            <button onClick={() => setView("grid")} title="Cuadrícula" style={{ background: view === "grid" ? "#e0f2fe" : "#fff", color: view === "grid" ? "#0369a1" : "#64748b", border: "none", padding: "7px 10px", fontSize: 12, cursor: "pointer", fontWeight: 600, borderLeft: "1px solid #e2e8f0" }}>▦</button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div onDragOver={(e) => e.preventDefault()} onDrop={onDrop} style={{ flex: 1, overflow: "auto", padding: 20, background: "#f8fafc" }}>
+          {archivos.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "60px 20px", color: "#94a3b8" }}>
+              <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.5 }}>📁</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#64748b", marginBottom: 6 }}>No hay archivos adjuntos</div>
+              <div style={{ fontSize: 12 }}>Click en <strong>＋ Subir archivos</strong> o arrastrá archivos aquí.</div>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px 20px", color: "#94a3b8", fontSize: 13 }}>Ningún archivo coincide con "{search}".</div>
+          ) : view === "grid" ? (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 12 }}>
+              {filtered.map((f) => (
+                <div key={f._idx} style={{ background: "#fff", borderRadius: 10, border: "1px solid #e2e8f0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                  <div onClick={() => openFile(f)} style={{ height: 100, background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", overflow: "hidden" }}>
+                    {isImage(f.name) && f.url
+                      ? <img src={f.url} alt={f.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      : <span style={{ fontSize: 38 }}>{fileIcon(f.name)}</span>}
+                  </div>
+                  <div style={{ padding: "8px 10px", flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+                    <div title={f.name} style={{ fontSize: 11, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</div>
+                    <div style={{ fontSize: 9, color: "#94a3b8", display: "flex", justifyContent: "space-between" }}>
+                      <span>{fmtDate(f.ts)}</span><span>{fmtBytes(f.size)}</span>
+                    </div>
+                    <div style={{ display: "flex", gap: 4, marginTop: 2 }}>
+                      <button onClick={() => openFile(f)} style={{ flex: 1, background: "#e0f2fe", color: "#0369a1", border: "none", borderRadius: 5, padding: "4px", fontSize: 10, fontWeight: 600, cursor: "pointer" }}>Abrir</button>
+                      <button onClick={() => startRename(f._idx, f.name)} title="Renombrar" style={{ background: "#fef3c7", color: "#92400e", border: "none", borderRadius: 5, padding: "4px 6px", fontSize: 10, cursor: "pointer" }}>✎</button>
+                      <button onClick={() => remove(f._idx)} title="Eliminar" style={{ background: "#fee2e2", color: "#991b1b", border: "none", borderRadius: 5, padding: "4px 6px", fontSize: 10, cursor: "pointer" }}>🗑</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {filtered.map((f) => (
+                <div key={f._idx} style={{ background: "#fff", borderRadius: 10, border: "1px solid #e2e8f0", padding: "10px 12px", display: "flex", alignItems: "center", gap: 12 }}>
+                  <div onClick={() => openFile(f)} style={{ width: 44, height: 44, background: "#f1f5f9", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "pointer", overflow: "hidden" }}>
+                    {isImage(f.name) && f.url
+                      ? <img src={f.url} alt={f.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      : <span style={{ fontSize: 22 }}>{fileIcon(f.name)}</span>}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {renaming === f._idx ? (
+                      <div style={{ display: "flex", gap: 4 }}>
+                        <input autoFocus value={renameVal} onChange={(e) => setRenameVal(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") saveRename(); if (e.key === "Escape") setRenaming(null); }} style={{ flex: 1, padding: "4px 8px", border: "1px solid #0369a1", borderRadius: 6, fontSize: 12, outline: "none" }} />
+                        <button onClick={saveRename} style={{ background: "#0369a1", color: "#fff", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>OK</button>
+                      </div>
+                    ) : (
+                      <>
+                        <div onClick={() => openFile(f)} title={f.name} style={{ fontSize: 13, fontWeight: 600, color: "#0369a1", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2 }}>{f.name}</div>
+                        <div style={{ fontSize: 10, color: "#94a3b8", display: "flex", gap: 10 }}>
+                          <span>📅 {fmtDate(f.ts)}</span>
+                          <span>📦 {fmtBytes(f.size)}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {renaming !== f._idx && (
+                    <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                      <button onClick={() => openFile(f)} title="Abrir" style={{ background: "#e0f2fe", color: "#0369a1", border: "none", borderRadius: 6, padding: "6px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Abrir</button>
+                      <button onClick={() => startRename(f._idx, f.name)} title="Renombrar" style={{ background: "#fef3c7", color: "#92400e", border: "none", borderRadius: 6, padding: "6px 8px", fontSize: 11, cursor: "pointer" }}>✎</button>
+                      <button onClick={() => remove(f._idx)} title="Eliminar" style={{ background: "#fee2e2", color: "#991b1b", border: "none", borderRadius: 6, padding: "6px 8px", fontSize: 11, cursor: "pointer" }}>🗑</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "10px 20px", borderTop: "1px solid #e2e8f0", fontSize: 10, color: "#94a3b8", display: "flex", justifyContent: "space-between" }}>
+          <span>💡 También podés arrastrar archivos al área central.</span>
+          <span>Total: {fmtBytes(archivos.reduce((s, f) => s + (f.size || 0), 0))}</span>
+        </div>
+      </div>
     </div>
+  );
+};
+
+const FileAttachments = ({ archivos = [], onChange, title }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button onClick={() => setOpen(true)} style={{ background: archivos.length ? "#0369a1" : "#e0f2fe", color: archivos.length ? "#fff" : "#0369a1", border: "1px solid " + (archivos.length ? "#0369a1" : "#bae6fd"), borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, transition: "all 0.15s" }}>
+        📎 Adjuntos
+        {archivos.length > 0 && (
+          <span style={{ background: archivos.length ? "#fff" : "#0369a1", color: archivos.length ? "#0369a1" : "#fff", borderRadius: 10, padding: "1px 7px", fontSize: 10, fontWeight: 800, minWidth: 18, textAlign: "center" }}>{archivos.length}</span>
+        )}
+      </button>
+      {open && <FilesModal archivos={archivos} onChange={onChange} onClose={() => setOpen(false)} title={title} />}
+    </>
   );
 };
 
@@ -316,7 +450,7 @@ const TaskCard = ({ t, i, onUpdate, onDelete }) => {
               </div>
             </div>
             <div><label style={s.lbl}>Notas</label><textarea value={t.notas} onChange={e => onUpdate("notas", e.target.value)} rows={3} style={{ ...s.inp, resize: "vertical" }} /></div>
-            <div><label style={s.lbl}>Archivos adjuntos</label><FileAttachments archivos={t.archivos||[]} onChange={v => onUpdate("archivos", v)} /></div>
+            <div><label style={s.lbl}>Archivos adjuntos</label><FileAttachments archivos={t.archivos||[]} onChange={v => onUpdate("archivos", v)} title={t.tarea} /></div>
             <button onClick={onDelete} style={{ background: "#fff", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, padding: "10px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Eliminar tarea</button>
           </div>
         </div>
@@ -327,7 +461,6 @@ const TaskCard = ({ t, i, onUpdate, onDelete }) => {
 
 const TaskRow = ({ t, i, onUpdate, onDelete }) => {
   const [notesOpen, setNotesOpen] = useState(false);
-  const [filesOpen, setFilesOpen] = useState(false);
   const eff = computeAvance(t.estado, t.avance);
   const isOverdue = t.fechaLimite && t.estado !== "Completado" && new Date(t.fechaLimite) < new Date();
   return (
@@ -351,14 +484,8 @@ const TaskRow = ({ t, i, onUpdate, onDelete }) => {
           <button onClick={() => setNotesOpen(false)} style={{ marginTop: 4, background: "#0369a1", color: "#fff", border: "none", borderRadius: 6, padding: "4px 14px", fontSize: 11, cursor: "pointer" }}>OK</button>
         </div>}
       </td>
-      <td style={{ padding: "7px 6px", position: "relative" }}>
-        <button onClick={() => setFilesOpen(!filesOpen)} style={{ background: (t.archivos||[]).length ? "#e0f2fe" : "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 4, padding: "2px 6px", fontSize: 11, cursor: "pointer", color: "#0369a1" }}>
-          📎{(t.archivos||[]).length || ""}
-        </button>
-        {filesOpen && <div style={{ position: "absolute", zIndex: 100, top: "100%", right: 0, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", width: 260 }}>
-          <FileAttachments archivos={t.archivos||[]} onChange={v => onUpdate("archivos", v)} />
-          <button onClick={() => setFilesOpen(false)} style={{ marginTop: 6, background: "#0369a1", color: "#fff", border: "none", borderRadius: 6, padding: "4px 14px", fontSize: 11, cursor: "pointer", width: "100%" }}>Cerrar</button>
-        </div>}
+      <td style={{ padding: "7px 6px" }}>
+        <FileAttachments archivos={t.archivos||[]} onChange={v => onUpdate("archivos", v)} title={t.tarea} />
       </td>
       <td style={{ padding: "7px 4px" }}><button onClick={onDelete} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: 14 }}>✕</button></td>
     </tr>
@@ -534,7 +661,7 @@ const MaestroCard = ({ item, idx, updItem, delItem }) => {
               <div><label style={s.lbl}>USD $</label><input value={item.usd} onChange={e => updItem(item.id, "usd", e.target.value)} style={s.inp} placeholder="0.00" /></div>
               <div><label style={s.lbl}>CRC ₡</label><input value={item.crc} onChange={e => updItem(item.id, "crc", e.target.value)} style={s.inp} placeholder="0.00" /></div>
             </div>
-            <div><label style={s.lbl}>Comprobante</label><FileAttachments archivos={item.comprobante||[]} onChange={v => updItem(item.id, "comprobante", v)} /></div>
+            <div><label style={s.lbl}>Comprobante</label><FileAttachments archivos={item.comprobante||[]} onChange={v => updItem(item.id, "comprobante", v)} title={item.concepto} /></div>
             <button onClick={() => delItem(item.id)} style={{ background: "#fff", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, padding: "10px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Eliminar registro</button>
           </div>
         </div>
@@ -544,7 +671,6 @@ const MaestroCard = ({ item, idx, updItem, delItem }) => {
 };
 
 const MaestroTableRow = ({ item, idx, updItem, delItem }) => {
-  const [filesOpen, setFilesOpen] = useState(false);
   return (
     <tr style={{ background: idx % 2 ? "#f8fafc" : "#fff", borderBottom: "1px solid #e2e8f0" }}>
       <td style={{ padding: "7px 8px" }}><span style={{ color: "#94a3b8", fontFamily: "'DM Mono', monospace", fontSize: 11 }}>{idx + 1}</span></td>
@@ -554,12 +680,8 @@ const MaestroTableRow = ({ item, idx, updItem, delItem }) => {
       <td style={{ padding: "7px 8px", minWidth: 100 }}><input value={item.factura} onChange={e => updItem(item.id, "factura", e.target.value)} style={s.tInp} placeholder="N° factura" /></td>
       <td style={{ padding: "7px 8px", minWidth: 100, textAlign: "right" }}><input value={item.usd} onChange={e => updItem(item.id, "usd", e.target.value)} style={{ ...s.tInp, textAlign: "right", fontFamily: "'DM Mono', monospace" }} placeholder="0.00" /></td>
       <td style={{ padding: "7px 8px", minWidth: 110, textAlign: "right" }}><input value={item.crc} onChange={e => updItem(item.id, "crc", e.target.value)} style={{ ...s.tInp, textAlign: "right", fontFamily: "'DM Mono', monospace" }} placeholder="0.00" /></td>
-      <td style={{ padding: "7px 8px", position: "relative" }}>
-        <button onClick={() => setFilesOpen(!filesOpen)} style={{ background: (item.comprobante||[]).length ? "#e0f2fe" : "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 4, padding: "2px 6px", fontSize: 11, cursor: "pointer", color: "#0369a1" }}>📎{(item.comprobante||[]).length || ""}</button>
-        {filesOpen && <div style={{ position: "absolute", zIndex: 100, top: "100%", right: 0, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", width: 260 }}>
-          <FileAttachments archivos={item.comprobante||[]} onChange={v => updItem(item.id, "comprobante", v)} />
-          <button onClick={() => setFilesOpen(false)} style={{ marginTop: 6, background: "#0369a1", color: "#fff", border: "none", borderRadius: 6, padding: "4px 14px", fontSize: 11, cursor: "pointer", width: "100%" }}>Cerrar</button>
-        </div>}
+      <td style={{ padding: "7px 8px" }}>
+        <FileAttachments archivos={item.comprobante||[]} onChange={v => updItem(item.id, "comprobante", v)} title={item.concepto} />
       </td>
       <td style={{ padding: "7px 4px" }}><button onClick={() => delItem(item.id)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: 14 }}>✕</button></td>
     </tr>
@@ -799,7 +921,7 @@ const BodegaDetail = ({ id, data, setData, isMobile }) => {
 
       <div style={{ marginBottom: 12 }}><label style={s.lbl}>Notas</label><textarea value={c.notas} onChange={e => upd("notas", e.target.value)} rows={3} style={{ ...s.inp, resize: "vertical" }} /></div>
 
-      <div><label style={s.lbl}>Documentos del cliente</label><FileAttachments archivos={c.archivos||[]} onChange={v => upd("archivos", v)} /></div>
+      <div><label style={s.lbl}>Documentos del cliente</label><FileAttachments archivos={c.archivos||[]} onChange={v => upd("archivos", v)} title={c.cliente || c.empresa || c.nombre || ""} /></div>
     </div>
   );
 };
