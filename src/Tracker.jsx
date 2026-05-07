@@ -571,9 +571,17 @@ const TaskRow = ({ t, i, onUpdate, onDelete, onMove, dragOverIdx, setDragOverIdx
         <span draggable onDragStart={onDragStart} title="Arrastrar para reordenar" style={{ cursor: "grab", color: "#cbd5e1", fontSize: 14, marginRight: 4, userSelect: "none" }}>⋮⋮</span>
         <span style={{ color: "#94a3b8", fontFamily: "'DM Mono', monospace", fontSize: 11 }}>{i + 1}</span>
       </td>
-      <td style={{ padding: "7px 6px" }}><input value={t.area} onChange={e => onUpdate("area", e.target.value)} style={s.tInp} /></td>
-      <td style={{ padding: "7px 6px", minWidth: 180 }}><input value={t.tarea} onChange={e => onUpdate("tarea", e.target.value)} style={s.tInp} /></td>
-      <td style={{ padding: "7px 6px" }}><input value={t.responsable} onChange={e => onUpdate("responsable", e.target.value)} style={s.tInp} /></td>
+      <td style={{ padding: "7px 6px", minWidth: 130 }}><input value={t.area} onChange={e => onUpdate("area", e.target.value)} style={s.tInp} /></td>
+      <td style={{ padding: "7px 6px", minWidth: 360, maxWidth: 460 }}>
+        <textarea
+          value={t.tarea}
+          onChange={e => onUpdate("tarea", e.target.value)}
+          rows={1}
+          ref={(el) => { if (el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; } }}
+          style={{ ...s.tInp, fontSize: 13, lineHeight: 1.4, resize: "none", overflow: "hidden", whiteSpace: "pre-wrap", wordBreak: "break-word", padding: "6px 8px" }}
+        />
+      </td>
+      <td style={{ padding: "7px 6px", minWidth: 150 }}><input value={t.responsable} onChange={e => onUpdate("responsable", e.target.value)} style={s.tInp} /></td>
       <td style={{ padding: "7px 6px" }}><select value={t.prioridad} onChange={e => onUpdate("prioridad", e.target.value)} style={s.sel}>{PRIORIDADES.map(o => <option key={o}>{o}</option>)}</select></td>
       <td style={{ padding: "7px 6px" }}><select value={t.estado} onChange={e => onUpdate("estado", e.target.value)} style={s.sel}>{ESTADOS.map(o => <option key={o}>{o}</option>)}</select></td>
       <td style={{ padding: "7px 6px" }}><input type="date" value={t.fechaLimite} onChange={e => onUpdate("fechaLimite", e.target.value)} style={{ ...s.tInp, minWidth: 110 }} /></td>
