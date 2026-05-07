@@ -72,6 +72,41 @@ const AutoTextarea = ({ value, onChange, style, ...rest }) => {
   );
 };
 
+const LiveTextarea = ({ value, onChange, style, ...rest }) => {
+  const [local, setLocal] = useState(value || "");
+  const focusedRef = useRef(false);
+  const flushTimer = useRef(null);
+  const localRef = useRef(local);
+  const valueRef = useRef(value);
+  useEffect(() => { localRef.current = local; }, [local]);
+  useEffect(() => { valueRef.current = value; }, [value]);
+  useEffect(() => {
+    if (!focusedRef.current && value !== local) setLocal(value || "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+  const flush = () => {
+    if (localRef.current !== valueRef.current) onChange({ target: { value: localRef.current } });
+  };
+  return (
+    <textarea
+      value={local}
+      onChange={(e) => {
+        setLocal(e.target.value);
+        if (flushTimer.current) clearTimeout(flushTimer.current);
+        flushTimer.current = setTimeout(flush, 700);
+      }}
+      onFocus={() => { focusedRef.current = true; }}
+      onBlur={() => {
+        focusedRef.current = false;
+        if (flushTimer.current) { clearTimeout(flushTimer.current); flushTimer.current = null; }
+        flush();
+      }}
+      style={style}
+      {...rest}
+    />
+  );
+};
+
 const LiveInput = ({ value, onChange, style, type = "text", ...rest }) => {
   const [local, setLocal] = useState(value || "");
   const focusedRef = useRef(false);
@@ -772,15 +807,15 @@ const BitacoraView = ({ data, setData, isMobile }) => {
           <button onClick={() => del(e.id)} style={{ position: "absolute", top: 8, right: 8, background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: 16 }}>✕</button>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 8, marginBottom: 10 }}>
             <div><label style={s.lbl}>Fecha</label><input type="date" value={e.fecha} onChange={ev => upd(e.id, "fecha", ev.target.value)} style={s.inp} /></div>
-            <div><label style={s.lbl}>Participantes</label><input value={e.participantes} onChange={ev => upd(e.id, "participantes", ev.target.value)} style={s.inp} /></div>
-            <div><label style={s.lbl}>Frente(s)</label><input value={e.frentes} onChange={ev => upd(e.id, "frentes", ev.target.value)} style={s.inp} /></div>
+            <div><label style={s.lbl}>Participantes</label><LiveInput value={e.participantes} onChange={ev => upd(e.id, "participantes", ev.target.value)} style={s.inp} /></div>
+            <div><label style={s.lbl}>Frente(s)</label><LiveInput value={e.frentes} onChange={ev => upd(e.id, "frentes", ev.target.value)} style={s.inp} /></div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 8, marginBottom: 8 }}>
-            <div><label style={s.lbl}>Acuerdos</label><textarea value={e.acuerdos} onChange={ev => upd(e.id, "acuerdos", ev.target.value)} rows={3} style={{ ...s.inp, resize: "vertical" }} /></div>
-            <div><label style={s.lbl}>Compromisos</label><textarea value={e.compromisos} onChange={ev => upd(e.id, "compromisos", ev.target.value)} rows={3} style={{ ...s.inp, resize: "vertical" }} /></div>
+            <div><label style={s.lbl}>Acuerdos</label><LiveTextarea value={e.acuerdos} onChange={ev => upd(e.id, "acuerdos", ev.target.value)} rows={3} style={{ ...s.inp, resize: "vertical" }} /></div>
+            <div><label style={s.lbl}>Compromisos</label><LiveTextarea value={e.compromisos} onChange={ev => upd(e.id, "compromisos", ev.target.value)} rows={3} style={{ ...s.inp, resize: "vertical" }} /></div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr auto", gap: 8, alignItems: "end" }}>
-            <div><label style={s.lbl}>Responsable</label><input value={e.responsable} onChange={ev => upd(e.id, "responsable", ev.target.value)} style={s.inp} /></div>
+            <div><label style={s.lbl}>Responsable</label><LiveInput value={e.responsable} onChange={ev => upd(e.id, "responsable", ev.target.value)} style={s.inp} /></div>
             <div><label style={s.lbl}>Fecha límite</label><input type="date" value={e.fechaLimite} onChange={ev => upd(e.id, "fechaLimite", ev.target.value)} style={s.inp} /></div>
             <div style={{ display: "flex", alignItems: "center", gap: 6, paddingBottom: 4 }}>
               <input type="checkbox" checked={e.cumplido} onChange={ev => upd(e.id, "cumplido", ev.target.checked)} style={{ accentColor: "#0369a1", width: 18, height: 18 }} />
