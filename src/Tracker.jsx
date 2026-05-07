@@ -499,14 +499,18 @@ const FileAttachments = ({ archivos = [], onChange, title }) => {
   );
 };
 
-const TaskCard = ({ t, i, onUpdate, onDelete }) => {
+const TaskCard = ({ t, i, onUpdate, onDelete, onMove, total }) => {
   const [open, setOpen] = useState(false);
   const eff = computeAvance(t.estado, t.avance);
   const isOverdue = t.fechaLimite && t.estado !== "Completado" && new Date(t.fechaLimite) < new Date();
   return (
     <div style={{ background: isOverdue ? "#fef2f2" : "#fff", borderRadius: 10, border: `1px solid ${isOverdue ? "#fecaca" : "#e2e8f0"}`, marginBottom: 8, overflow: "hidden" }}>
       <div onClick={() => setOpen(!open)} style={{ padding: "12px 14px", cursor: "pointer", display: "flex", gap: 10, alignItems: "flex-start" }}>
-        <span style={{ fontSize: 11, color: "#94a3b8", fontFamily: "'DM Mono', monospace", minWidth: 18, paddingTop: 2 }}>{i + 1}</span>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, minWidth: 24 }}>
+          {onMove && i > 0 && <button onClick={(e) => { e.stopPropagation(); onMove(i, i - 1); }} style={{ background: "#f1f5f9", border: "none", borderRadius: 4, width: 22, height: 18, fontSize: 10, color: "#64748b", cursor: "pointer", padding: 0 }}>▲</button>}
+          <span style={{ fontSize: 11, color: "#94a3b8", fontFamily: "'DM Mono', monospace" }}>{i + 1}</span>
+          {onMove && i < (total - 1) && <button onClick={(e) => { e.stopPropagation(); onMove(i, i + 1); }} style={{ background: "#f1f5f9", border: "none", borderRadius: 4, width: 22, height: 18, fontSize: 10, color: "#64748b", cursor: "pointer", padding: 0 }}>▼</button>}
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", lineHeight: 1.3, marginBottom: 4 }}>{t.tarea}</div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
@@ -552,13 +556,21 @@ const TaskCard = ({ t, i, onUpdate, onDelete }) => {
   );
 };
 
-const TaskRow = ({ t, i, onUpdate, onDelete }) => {
+const TaskRow = ({ t, i, onUpdate, onDelete, onMove, dragOverIdx, setDragOverIdx, total }) => {
   const [notesOpen, setNotesOpen] = useState(false);
   const eff = computeAvance(t.estado, t.avance);
   const isOverdue = t.fechaLimite && t.estado !== "Completado" && new Date(t.fechaLimite) < new Date();
+  const isDragOver = dragOverIdx === i;
+  const onDragStart = (e) => { e.dataTransfer.setData("text/plain", String(i)); e.dataTransfer.effectAllowed = "move"; };
+  const onDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (dragOverIdx !== i) setDragOverIdx(i); };
+  const onDragLeave = () => { if (dragOverIdx === i) setDragOverIdx(null); };
+  const onDrop = (e) => { e.preventDefault(); const from = parseInt(e.dataTransfer.getData("text/plain"), 10); if (!isNaN(from) && from !== i) onMove(from, i); setDragOverIdx(null); };
   return (
-    <tr style={{ background: isOverdue ? "#fef2f2" : i % 2 ? "#f8fafc" : "#fff", borderBottom: "1px solid #e2e8f0" }}>
-      <td style={{ padding: "7px 6px" }}><span style={{ color: "#94a3b8", fontFamily: "'DM Mono', monospace", fontSize: 11 }}>{i + 1}</span></td>
+    <tr onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop} style={{ background: isOverdue ? "#fef2f2" : i % 2 ? "#f8fafc" : "#fff", borderBottom: "1px solid #e2e8f0", borderTop: isDragOver ? "2px solid #0369a1" : undefined }}>
+      <td style={{ padding: "7px 6px", whiteSpace: "nowrap" }}>
+        <span draggable onDragStart={onDragStart} title="Arrastrar para reordenar" style={{ cursor: "grab", color: "#cbd5e1", fontSize: 14, marginRight: 4, userSelect: "none" }}>⋮⋮</span>
+        <span style={{ color: "#94a3b8", fontFamily: "'DM Mono', monospace", fontSize: 11 }}>{i + 1}</span>
+      </td>
       <td style={{ padding: "7px 6px" }}><input value={t.area} onChange={e => onUpdate("area", e.target.value)} style={s.tInp} /></td>
       <td style={{ padding: "7px 6px", minWidth: 180 }}><input value={t.tarea} onChange={e => onUpdate("tarea", e.target.value)} style={s.tInp} /></td>
       <td style={{ padding: "7px 6px" }}><input value={t.responsable} onChange={e => onUpdate("responsable", e.target.value)} style={s.tInp} /></td>
@@ -625,9 +637,11 @@ const FrenteView = ({ frenteId, data, setData, isMobile }) => {
   const frente = FRENTES.find(f => f.id === frenteId);
   const tasks = data[frenteId] || [];
   const stats = getFrente(frenteId, data);
+  const [dragOverIdx, setDragOverIdx] = useState(null);
   const upd = (tid, f, v) => setData(prev => { const nd = { ...prev }; nd[frenteId] = nd[frenteId].map(t => { if (t.id !== tid) return t; const u = { ...t, [f]: v }; if (f === "estado") u.avance = computeAvance(v, t.avance) ?? t.avance; return u; }); return nd; });
   const add = () => { const mx = tasks.length ? Math.max(...tasks.map(t => t.id)) : 0; setData(prev => ({ ...prev, [frenteId]: [...prev[frenteId], { id: mx+1, area: "", tarea: "Nueva tarea", responsable: "", prioridad: "Media", estado: "Pendiente", fechaLimite: "", avance: 0, notas: "", archivos: [] }] })); };
   const del = (id) => setData(prev => ({ ...prev, [frenteId]: prev[frenteId].filter(t => t.id !== id) }));
+  const move = (from, to) => { if (from === to || from < 0 || to < 0 || from >= tasks.length || to >= tasks.length) return; setData(prev => { const arr = [...(prev[frenteId] || [])]; const [m] = arr.splice(from, 1); arr.splice(to, 0, m); return { ...prev, [frenteId]: arr }; }); };
   const kpis = [{ l:"Total", v:stats.total, c:"#0369a1" }, { l:"Listas", v:stats.completados, c:"#0d9488" }, { l:"Proceso", v:stats.enProceso, c:"#f59e0b" }, { l:"Avance", v:`${Math.round(stats.avance)}%`, c:"#0369a1" }];
   return (
     <div>
@@ -642,7 +656,7 @@ const FrenteView = ({ frenteId, data, setData, isMobile }) => {
         </div>))}
       </div>
       {isMobile ? (
-        <div>{tasks.map((t, i) => <TaskCard key={t.id} t={t} i={i} onUpdate={(f, v) => upd(t.id, f, v)} onDelete={() => del(t.id)} />)}</div>
+        <div>{tasks.map((t, i) => <TaskCard key={t.id} t={t} i={i} total={tasks.length} onUpdate={(f, v) => upd(t.id, f, v)} onDelete={() => del(t.id)} onMove={move} />)}</div>
       ) : (
         <div style={{ overflowX: "auto", borderRadius: 10, border: "1px solid #e2e8f0" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
@@ -651,7 +665,7 @@ const FrenteView = ({ frenteId, data, setData, isMobile }) => {
                 <th key={h} style={{ padding: "9px 6px", textAlign: "left", color: "#64748b", fontWeight: 600, fontSize: 10, textTransform: "uppercase", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap" }}>{h}</th>
               ))}
             </tr></thead>
-            <tbody>{tasks.map((t, i) => <TaskRow key={t.id} t={t} i={i} onUpdate={(f, v) => upd(t.id, f, v)} onDelete={() => del(t.id)} />)}</tbody>
+            <tbody>{tasks.map((t, i) => <TaskRow key={t.id} t={t} i={i} total={tasks.length} onUpdate={(f, v) => upd(t.id, f, v)} onDelete={() => del(t.id)} onMove={move} dragOverIdx={dragOverIdx} setDragOverIdx={setDragOverIdx} />)}</tbody>
           </table>
         </div>
       )}
