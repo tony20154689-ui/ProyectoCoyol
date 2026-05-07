@@ -243,6 +243,37 @@ const fmtBytes = (b) => { if (!b && b !== 0) return ""; if (b < 1024) return b +
 const fmtDate = (ts) => { if (!ts) return ""; const d = new Date(ts); return d.toLocaleDateString("es-CR", { day: "2-digit", month: "short", year: "numeric" }); };
 const isImage = (name = "") => /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(name);
 
+const NotesModal = ({ title, value, onSave, onClose }) => {
+  const [text, setText] = useState(value || "");
+  const dirty = text !== (value || "");
+  const handleClose = () => {
+    if (dirty && !confirm("Tenés cambios sin guardar. ¿Cerrar sin guardar?")) return;
+    onClose();
+  };
+  return (
+    <div onClick={handleClose} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", backdropFilter: "blur(4px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 720, maxHeight: "90vh", display: "flex", flexDirection: "column", boxShadow: "0 25px 60px rgba(0,0,0,0.3)" }}>
+        <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ fontSize: 20 }}>📝</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", fontFamily: "'Outfit', sans-serif" }}>Anotaciones</div>
+            <div style={{ fontSize: 11, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title || ""}</div>
+          </div>
+          <button onClick={handleClose} style={{ background: "#f1f5f9", border: "none", borderRadius: 8, width: 32, height: 32, fontSize: 16, cursor: "pointer", color: "#64748b" }}>✕</button>
+        </div>
+        <div style={{ flex: 1, padding: 20, background: "#f8fafc", overflow: "auto" }}>
+          <textarea autoFocus value={text} onChange={(e) => setText(e.target.value)} placeholder="Escribí tus notas aquí…" style={{ width: "100%", minHeight: 320, padding: 14, border: "1px solid #e2e8f0", borderRadius: 10, fontSize: 14, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5, outline: "none", resize: "vertical", background: "#fff", color: "#0f172a" }} />
+          <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>{text.length} caracteres · {text.split(/\s+/).filter(Boolean).length} palabras</div>
+        </div>
+        <div style={{ padding: "12px 20px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+          <button onClick={handleClose} style={{ background: "#fff", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: 8, padding: "9px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
+          <button onClick={() => onSave(text)} disabled={!dirty} style={{ background: dirty ? "linear-gradient(135deg, #0369a1, #0284c7)" : "#cbd5e1", color: "#fff", border: "none", borderRadius: 8, padding: "9px 22px", fontSize: 13, fontWeight: 700, cursor: dirty ? "pointer" : "not-allowed" }}>Guardar</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const FilesModal = ({ archivos, onChange, onClose, title }) => {
   const ref = useRef();
   const [search, setSearch] = useState("");
@@ -539,12 +570,9 @@ const TaskRow = ({ t, i, onUpdate, onDelete }) => {
           ? <input type="number" min={0} max={100} value={t.avance} onChange={e => onUpdate("avance", Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))} style={{ ...s.tInp, width: 52, textAlign: "center", border: "1px solid #cbd5e1", borderRadius: 4 }} />
           : <span style={{ fontSize: 11, fontFamily: "'DM Mono', monospace", color: eff >= 80 ? "#0369a1" : "#64748b" }}>{eff !== null ? `${eff}%` : "N/A"}</span>}
       </td>
-      <td style={{ padding: "7px 6px", position: "relative" }}>
-        <div onClick={() => setNotesOpen(!notesOpen)} style={{ cursor: "pointer", fontSize: 12, color: t.notas ? "#0f172a" : "#94a3b8", maxWidth: 130, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.notas || "—"}</div>
-        {notesOpen && <div style={{ position: "absolute", zIndex: 100, top: "100%", left: 0, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", width: 250 }}>
-          <textarea value={t.notas} onChange={e => onUpdate("notas", e.target.value)} rows={4} style={{ ...s.inp, fontSize: 12 }} autoFocus />
-          <button onClick={() => setNotesOpen(false)} style={{ marginTop: 4, background: "#0369a1", color: "#fff", border: "none", borderRadius: 6, padding: "4px 14px", fontSize: 11, cursor: "pointer" }}>OK</button>
-        </div>}
+      <td style={{ padding: "7px 6px" }}>
+        <div onClick={() => setNotesOpen(true)} style={{ cursor: "pointer", fontSize: 12, color: t.notas ? "#0f172a" : "#94a3b8", maxWidth: 130, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.notas || "—"}</div>
+        {notesOpen && <NotesModal title={t.tarea} value={t.notas || ""} onSave={(v) => { onUpdate("notas", v); setNotesOpen(false); }} onClose={() => setNotesOpen(false)} />}
       </td>
       <td style={{ padding: "7px 6px" }}>
         <FileAttachments archivos={t.archivos||[]} onChange={v => onUpdate("archivos", v)} title={t.tarea} />
