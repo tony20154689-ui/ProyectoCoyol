@@ -789,9 +789,27 @@ const MaestroTableRow = ({ item, idx, updItem, delItem }) => {
   return (
     <tr style={{ background: idx % 2 ? "#f8fafc" : "#fff", borderBottom: "1px solid #e2e8f0" }}>
       <td style={{ padding: "7px 8px" }}><span style={{ color: "#94a3b8", fontFamily: "'DM Mono', monospace", fontSize: 11 }}>{idx + 1}</span></td>
-      <td style={{ padding: "7px 8px", minWidth: 160 }}><input value={item.concepto} onChange={e => updItem(item.id, "concepto", e.target.value)} style={s.tInp} placeholder="Concepto" /></td>
+      <td style={{ padding: "7px 8px", minWidth: 320, maxWidth: 460 }}>
+        <textarea
+          value={item.concepto}
+          onChange={e => updItem(item.id, "concepto", e.target.value)}
+          rows={1}
+          ref={(el) => { if (el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; } }}
+          placeholder="Concepto"
+          style={{ ...s.tInp, fontSize: 13, lineHeight: 1.4, resize: "none", overflow: "hidden", whiteSpace: "pre-wrap", wordBreak: "break-word", padding: "6px 8px" }}
+        />
+      </td>
       <td style={{ padding: "7px 8px" }}><input type="date" value={item.fecha} onChange={e => updItem(item.id, "fecha", e.target.value)} style={{ ...s.tInp, minWidth: 115 }} /></td>
-      <td style={{ padding: "7px 8px", minWidth: 130 }}><input value={item.destino} onChange={e => updItem(item.id, "destino", e.target.value)} style={s.tInp} placeholder="Destino u origen" /></td>
+      <td style={{ padding: "7px 8px", minWidth: 180, maxWidth: 280 }}>
+        <textarea
+          value={item.destino}
+          onChange={e => updItem(item.id, "destino", e.target.value)}
+          rows={1}
+          ref={(el) => { if (el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; } }}
+          placeholder="Destino u origen"
+          style={{ ...s.tInp, fontSize: 13, lineHeight: 1.4, resize: "none", overflow: "hidden", whiteSpace: "pre-wrap", wordBreak: "break-word", padding: "6px 8px" }}
+        />
+      </td>
       <td style={{ padding: "7px 8px", minWidth: 100 }}><input value={item.factura} onChange={e => updItem(item.id, "factura", e.target.value)} style={s.tInp} placeholder="N° factura" /></td>
       <td style={{ padding: "7px 8px", minWidth: 100, textAlign: "right" }}><input value={item.usd} onChange={e => updItem(item.id, "usd", e.target.value)} style={{ ...s.tInp, textAlign: "right", fontFamily: "'DM Mono', monospace" }} placeholder="0.00" /></td>
       <td style={{ padding: "7px 8px", minWidth: 110, textAlign: "right" }}><input value={item.crc} onChange={e => updItem(item.id, "crc", e.target.value)} style={{ ...s.tInp, textAlign: "right", fontFamily: "'DM Mono', monospace" }} placeholder="0.00" /></td>
