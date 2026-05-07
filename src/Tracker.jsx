@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { storage } from "./firebase.js";
 
@@ -793,18 +793,50 @@ const FrenteView = ({ frenteId, data, setData, isMobile }) => {
 
 const BitacoraView = ({ data, setData, isMobile }) => {
   const entries = data.bitacora || [];
-  const addE = () => { const mx = entries.length ? Math.max(...entries.map(e => e.id)) : 0; setData(prev => ({ ...prev, bitacora: [...prev.bitacora, { id: mx+1, fecha: new Date().toISOString().split("T")[0], participantes: "", frentes: "", acuerdos: "", compromisos: "", responsable: "", fechaLimite: "", cumplido: false }] })); };
+  const [sortDir, setSortDir] = useState("desc");
+  const [generating, setGenerating] = useState(null);
+  const sortedEntries = useMemo(() => {
+    const arr = [...entries];
+    arr.sort((a, b) => {
+      const da = a.fecha || "";
+      const db = b.fecha || "";
+      if (da === db) return (b.id || 0) - (a.id || 0);
+      return sortDir === "desc" ? db.localeCompare(da) : da.localeCompare(db);
+    });
+    return arr;
+  }, [entries, sortDir]);
+  const addE = () => { const mx = entries.length ? Math.max(...entries.map(e => e.id)) : 0; setData(prev => ({ ...prev, bitacora: [...(prev.bitacora||[]), { id: mx+1, fecha: new Date().toISOString().split("T")[0], participantes: "", frentes: "", acuerdos: "", compromisos: "", responsable: "", fechaLimite: "", cumplido: false }] })); };
   const upd = (id, f, v) => setData(prev => ({ ...prev, bitacora: prev.bitacora.map(e => e.id === id ? { ...e, [f]: v } : e) }));
   const del = (id) => setData(prev => ({ ...prev, bitacora: prev.bitacora.filter(e => e.id !== id) }));
+  const downloadDocx = async (entry) => {
+    setGenerating(entry.id);
+    try {
+      const { generateMinutaWord } = await import("./wordExport.js");
+      await generateMinutaWord({ entry, data, FRENTES });
+    }
+    catch (err) { alert("Error al generar el Word: " + (err?.message || err)); }
+    finally { setGenerating(null); }
+  };
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
         <h2 style={{ margin: 0, fontSize: isMobile ? 14 : 17, fontWeight: 800, color: "#0f172a" }}>📅 Bitácora</h2>
-        <button onClick={addE} style={{ background: "#0369a1", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>+ Reunión</button>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <select value={sortDir} onChange={(e) => setSortDir(e.target.value)} style={{ padding: "7px 10px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 12, background: "#fff", cursor: "pointer" }}>
+            <option value="desc">📅 Más recientes primero</option>
+            <option value="asc">📅 Más antiguas primero</option>
+          </select>
+          <button onClick={addE} style={{ background: "#0369a1", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>+ Reunión</button>
+        </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {entries.map(e => (<div key={e.id} style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 12 : 18, border: "1px solid #e2e8f0", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-          <button onClick={() => del(e.id)} style={{ position: "absolute", top: 8, right: 8, background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: 16 }}>✕</button>
+        {sortedEntries.map(e => (<div key={e.id} style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 12 : 18, border: "1px solid #e2e8f0", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+          <div style={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 4 }}>
+            <button onClick={() => downloadDocx(e)} disabled={generating === e.id} title="Descargar acta en Word" style={{ background: generating === e.id ? "#cbd5e1" : "linear-gradient(135deg, #0369a1, #0284c7)", color: "#fff", border: "none", borderRadius: 6, padding: "5px 11px", fontSize: 11, fontWeight: 700, cursor: generating === e.id ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+              {generating === e.id ? "⏳ Generando…" : "📄 Word"}
+            </button>
+            <button onClick={() => del(e.id)} style={{ background: "#fff", border: "1px solid #fecaca", borderRadius: 6, color: "#dc2626", cursor: "pointer", fontSize: 13, padding: "4px 10px", fontWeight: 700 }}>✕</button>
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 8, marginBottom: 10 }}>
             <div><label style={s.lbl}>Fecha</label><input type="date" value={e.fecha} onChange={ev => upd(e.id, "fecha", ev.target.value)} style={s.inp} /></div>
             <div><label style={s.lbl}>Participantes</label><LiveInput value={e.participantes} onChange={ev => upd(e.id, "participantes", ev.target.value)} style={s.inp} /></div>
