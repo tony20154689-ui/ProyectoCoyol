@@ -25,7 +25,7 @@ const FRENTES = [
   { id: "comercializacion", icon: "🏢", name: "Comercialización", short: "Comer.", full: "Pre-colocación / Comercialización" },
   { id: "construccion", icon: "🏗️", name: "Construcción", short: "Const.", full: "Movimientos de Tierra / Construcción" },
   { id: "entregas", icon: "🔑", name: "Entregas", short: "Entreg.", full: "Entregas de Bodegas" },
-  { id: "puesta", icon: "🚀", name: "Puesta en Marcha", short: "Puesta", full: "Puesta en Marcha del Proyecto" },
+  { id: "puesta", icon: "🚀", name: "Property Management", short: "PM", full: "Property Management" },
 ];
 
 const AutoTextarea = ({ value, onChange, style, ...rest }) => {
