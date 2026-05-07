@@ -28,6 +28,26 @@ const FRENTES = [
   { id: "puesta", icon: "🚀", name: "Puesta en Marcha", short: "Puesta", full: "Puesta en Marcha del Proyecto" },
 ];
 
+const AutoTextarea = ({ value, onChange, style, ...rest }) => {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  }, [value]);
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={onChange}
+      rows={1}
+      style={{ resize: "none", overflow: "hidden", whiteSpace: "pre-wrap", wordBreak: "break-word", ...style }}
+      {...rest}
+    />
+  );
+};
+
 const useIsMobile = () => {
   const [m, setM] = useState(window.innerWidth < 768);
   useEffect(() => { const h = () => setM(window.innerWidth < 768); window.addEventListener("resize", h); return () => window.removeEventListener("resize", h); }, []);
@@ -573,13 +593,7 @@ const TaskRow = ({ t, i, onUpdate, onDelete, onMove, dragOverIdx, setDragOverIdx
       </td>
       <td style={{ padding: "7px 6px", minWidth: 130 }}><input value={t.area} onChange={e => onUpdate("area", e.target.value)} style={s.tInp} /></td>
       <td style={{ padding: "7px 6px", minWidth: 360, maxWidth: 460 }}>
-        <textarea
-          value={t.tarea}
-          onChange={e => onUpdate("tarea", e.target.value)}
-          rows={1}
-          ref={(el) => { if (el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; } }}
-          style={{ ...s.tInp, fontSize: 13, lineHeight: 1.4, resize: "none", overflow: "hidden", whiteSpace: "pre-wrap", wordBreak: "break-word", padding: "6px 8px" }}
-        />
+        <AutoTextarea value={t.tarea} onChange={e => onUpdate("tarea", e.target.value)} style={{ ...s.tInp, fontSize: 13, lineHeight: 1.4, padding: "6px 8px" }} />
       </td>
       <td style={{ padding: "7px 6px", minWidth: 150 }}><input value={t.responsable} onChange={e => onUpdate("responsable", e.target.value)} style={s.tInp} /></td>
       <td style={{ padding: "7px 6px" }}><select value={t.prioridad} onChange={e => onUpdate("prioridad", e.target.value)} style={s.sel}>{PRIORIDADES.map(o => <option key={o}>{o}</option>)}</select></td>
@@ -790,25 +804,11 @@ const MaestroTableRow = ({ item, idx, updItem, delItem }) => {
     <tr style={{ background: idx % 2 ? "#f8fafc" : "#fff", borderBottom: "1px solid #e2e8f0" }}>
       <td style={{ padding: "7px 8px" }}><span style={{ color: "#94a3b8", fontFamily: "'DM Mono', monospace", fontSize: 11 }}>{idx + 1}</span></td>
       <td style={{ padding: "7px 8px", minWidth: 320, maxWidth: 460 }}>
-        <textarea
-          value={item.concepto}
-          onChange={e => updItem(item.id, "concepto", e.target.value)}
-          rows={1}
-          ref={(el) => { if (el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; } }}
-          placeholder="Concepto"
-          style={{ ...s.tInp, fontSize: 13, lineHeight: 1.4, resize: "none", overflow: "hidden", whiteSpace: "pre-wrap", wordBreak: "break-word", padding: "6px 8px" }}
-        />
+        <AutoTextarea value={item.concepto} onChange={e => updItem(item.id, "concepto", e.target.value)} placeholder="Concepto" style={{ ...s.tInp, fontSize: 13, lineHeight: 1.4, padding: "6px 8px" }} />
       </td>
       <td style={{ padding: "7px 8px" }}><input type="date" value={item.fecha} onChange={e => updItem(item.id, "fecha", e.target.value)} style={{ ...s.tInp, minWidth: 115 }} /></td>
       <td style={{ padding: "7px 8px", minWidth: 180, maxWidth: 280 }}>
-        <textarea
-          value={item.destino}
-          onChange={e => updItem(item.id, "destino", e.target.value)}
-          rows={1}
-          ref={(el) => { if (el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; } }}
-          placeholder="Destino u origen"
-          style={{ ...s.tInp, fontSize: 13, lineHeight: 1.4, resize: "none", overflow: "hidden", whiteSpace: "pre-wrap", wordBreak: "break-word", padding: "6px 8px" }}
-        />
+        <AutoTextarea value={item.destino} onChange={e => updItem(item.id, "destino", e.target.value)} placeholder="Destino u origen" style={{ ...s.tInp, fontSize: 13, lineHeight: 1.4, padding: "6px 8px" }} />
       </td>
       <td style={{ padding: "7px 8px", minWidth: 100 }}><input value={item.factura} onChange={e => updItem(item.id, "factura", e.target.value)} style={s.tInp} placeholder="N° factura" /></td>
       <td style={{ padding: "7px 8px", minWidth: 100, textAlign: "right" }}><input value={item.usd} onChange={e => updItem(item.id, "usd", e.target.value)} style={{ ...s.tInp, textAlign: "right", fontFamily: "'DM Mono', monospace" }} placeholder="0.00" /></td>
