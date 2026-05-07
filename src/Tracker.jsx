@@ -21,7 +21,7 @@ const FRENTES = [
   { id: "financiero", icon: "💰", name: "Financiero", short: "Finan.", full: "Estructuración Financiera" },
   { id: "legal", icon: "⚖️", name: "Legal", short: "Legal", full: "Estructuración Legal" },
   { id: "fiscal", icon: "📋", name: "Fiscal", short: "Fiscal", full: "Estructuración Fiscal" },
-  { id: "permisologia", icon: "📄", name: "Permisología", short: "Permi.", full: "Permisos y Licencias" },
+  { id: "permisologia", icon: "📄", name: "Diseño y Permisología", short: "Diseño", full: "Diseño y Permisología" },
   { id: "comercializacion", icon: "🏢", name: "Comercialización", short: "Comer.", full: "Pre-colocación / Comercialización" },
   { id: "construccion", icon: "🏗️", name: "Construcción", short: "Const.", full: "Movimientos de Tierra / Construcción" },
   { id: "entregas", icon: "🔑", name: "Entregas", short: "Entreg.", full: "Entregas de Bodegas" },
