@@ -29,20 +29,80 @@ const FRENTES = [
 ];
 
 const AutoTextarea = ({ value, onChange, style, ...rest }) => {
-  const ref = useRef(null);
+  const elRef = useRef(null);
+  const [local, setLocal] = useState(value || "");
+  const focusedRef = useRef(false);
+  const flushTimer = useRef(null);
+  const localRef = useRef(local);
+  const valueRef = useRef(value);
+  useEffect(() => { localRef.current = local; }, [local]);
+  useEffect(() => { valueRef.current = value; }, [value]);
   useEffect(() => {
-    const el = ref.current;
+    if (!focusedRef.current && value !== local) setLocal(value || "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+  useEffect(() => {
+    const el = elRef.current;
     if (!el) return;
     el.style.height = "auto";
     el.style.height = el.scrollHeight + "px";
-  }, [value]);
+  }, [local]);
+  const flush = () => {
+    if (localRef.current !== valueRef.current) onChange({ target: { value: localRef.current } });
+  };
   return (
     <textarea
-      ref={ref}
-      value={value}
-      onChange={onChange}
+      ref={elRef}
+      value={local}
+      onChange={(e) => {
+        setLocal(e.target.value);
+        if (flushTimer.current) clearTimeout(flushTimer.current);
+        flushTimer.current = setTimeout(flush, 700);
+      }}
+      onFocus={() => { focusedRef.current = true; }}
+      onBlur={() => {
+        focusedRef.current = false;
+        if (flushTimer.current) { clearTimeout(flushTimer.current); flushTimer.current = null; }
+        flush();
+      }}
       rows={1}
       style={{ resize: "none", overflow: "hidden", whiteSpace: "pre-wrap", wordBreak: "break-word", ...style }}
+      {...rest}
+    />
+  );
+};
+
+const LiveInput = ({ value, onChange, style, type = "text", ...rest }) => {
+  const [local, setLocal] = useState(value || "");
+  const focusedRef = useRef(false);
+  const flushTimer = useRef(null);
+  const localRef = useRef(local);
+  const valueRef = useRef(value);
+  useEffect(() => { localRef.current = local; }, [local]);
+  useEffect(() => { valueRef.current = value; }, [value]);
+  useEffect(() => {
+    if (!focusedRef.current && value !== local) setLocal(value || "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+  const flush = () => {
+    if (localRef.current !== valueRef.current) onChange({ target: { value: localRef.current } });
+  };
+  return (
+    <input
+      type={type}
+      value={local}
+      onChange={(e) => {
+        setLocal(e.target.value);
+        if (flushTimer.current) clearTimeout(flushTimer.current);
+        flushTimer.current = setTimeout(flush, 700);
+      }}
+      onFocus={() => { focusedRef.current = true; }}
+      onBlur={() => {
+        focusedRef.current = false;
+        if (flushTimer.current) { clearTimeout(flushTimer.current); flushTimer.current = null; }
+        flush();
+      }}
+      style={style}
       {...rest}
     />
   );
@@ -591,11 +651,11 @@ const TaskRow = ({ t, i, onUpdate, onDelete, onMove, dragOverIdx, setDragOverIdx
         <span draggable onDragStart={onDragStart} title="Arrastrar para reordenar" style={{ cursor: "grab", color: "#cbd5e1", fontSize: 14, marginRight: 4, userSelect: "none" }}>⋮⋮</span>
         <span style={{ color: "#94a3b8", fontFamily: "'DM Mono', monospace", fontSize: 11 }}>{i + 1}</span>
       </td>
-      <td style={{ padding: "7px 6px", minWidth: 130 }}><input value={t.area} onChange={e => onUpdate("area", e.target.value)} style={s.tInp} /></td>
+      <td style={{ padding: "7px 6px", minWidth: 130 }}><LiveInput value={t.area} onChange={e => onUpdate("area", e.target.value)} style={s.tInp} /></td>
       <td style={{ padding: "7px 6px", minWidth: 360, maxWidth: 460 }}>
         <AutoTextarea value={t.tarea} onChange={e => onUpdate("tarea", e.target.value)} style={{ ...s.tInp, fontSize: 13, lineHeight: 1.4, padding: "6px 8px" }} />
       </td>
-      <td style={{ padding: "7px 6px", minWidth: 150 }}><input value={t.responsable} onChange={e => onUpdate("responsable", e.target.value)} style={s.tInp} /></td>
+      <td style={{ padding: "7px 6px", minWidth: 150 }}><LiveInput value={t.responsable} onChange={e => onUpdate("responsable", e.target.value)} style={s.tInp} /></td>
       <td style={{ padding: "7px 6px" }}><select value={t.prioridad} onChange={e => onUpdate("prioridad", e.target.value)} style={s.sel}>{PRIORIDADES.map(o => <option key={o}>{o}</option>)}</select></td>
       <td style={{ padding: "7px 6px" }}><select value={t.estado} onChange={e => onUpdate("estado", e.target.value)} style={s.sel}>{ESTADOS.map(o => <option key={o}>{o}</option>)}</select></td>
       <td style={{ padding: "7px 6px" }}><input type="date" value={t.fechaLimite} onChange={e => onUpdate("fechaLimite", e.target.value)} style={{ ...s.tInp, minWidth: 110 }} /></td>
@@ -810,9 +870,9 @@ const MaestroTableRow = ({ item, idx, updItem, delItem }) => {
       <td style={{ padding: "7px 8px", minWidth: 180, maxWidth: 280 }}>
         <AutoTextarea value={item.destino} onChange={e => updItem(item.id, "destino", e.target.value)} placeholder="Destino u origen" style={{ ...s.tInp, fontSize: 13, lineHeight: 1.4, padding: "6px 8px" }} />
       </td>
-      <td style={{ padding: "7px 8px", minWidth: 100 }}><input value={item.factura} onChange={e => updItem(item.id, "factura", e.target.value)} style={s.tInp} placeholder="N° factura" /></td>
-      <td style={{ padding: "7px 8px", minWidth: 100, textAlign: "right" }}><input value={item.usd} onChange={e => updItem(item.id, "usd", e.target.value)} style={{ ...s.tInp, textAlign: "right", fontFamily: "'DM Mono', monospace" }} placeholder="0.00" /></td>
-      <td style={{ padding: "7px 8px", minWidth: 110, textAlign: "right" }}><input value={item.crc} onChange={e => updItem(item.id, "crc", e.target.value)} style={{ ...s.tInp, textAlign: "right", fontFamily: "'DM Mono', monospace" }} placeholder="0.00" /></td>
+      <td style={{ padding: "7px 8px", minWidth: 100 }}><LiveInput value={item.factura} onChange={e => updItem(item.id, "factura", e.target.value)} style={s.tInp} placeholder="N° factura" /></td>
+      <td style={{ padding: "7px 8px", minWidth: 100, textAlign: "right" }}><LiveInput value={item.usd} onChange={e => updItem(item.id, "usd", e.target.value)} style={{ ...s.tInp, textAlign: "right", fontFamily: "'DM Mono', monospace" }} placeholder="0.00" /></td>
+      <td style={{ padding: "7px 8px", minWidth: 110, textAlign: "right" }}><LiveInput value={item.crc} onChange={e => updItem(item.id, "crc", e.target.value)} style={{ ...s.tInp, textAlign: "right", fontFamily: "'DM Mono', monospace" }} placeholder="0.00" /></td>
       <td style={{ padding: "7px 8px" }}>
         <FileAttachments archivos={item.comprobante||[]} onChange={v => updItem(item.id, "comprobante", v)} title={item.concepto} />
       </td>
