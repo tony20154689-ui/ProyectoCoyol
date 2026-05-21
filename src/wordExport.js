@@ -201,6 +201,36 @@ export async function generateMinutaWord({ entry, data, FRENTES }) {
     rows: [tableHeaderRow, ...frenteRows],
   });
 
+  // ===== Consolidado: Decisiones Tomadas y Pendientes por Resolver =====
+  const decisionesBlocks = [];
+  const pendientesBlocks = [];
+  allFrentes.forEach(f => {
+    const tasks = (data && data[f.id]) || [];
+    const conDecision = tasks.filter(t => (t.decisiones || "").trim());
+    const conPendiente = tasks.filter(t => (t.notas || "").trim() && t.estado !== "Completado");
+    if (conDecision.length) {
+      decisionesBlocks.push(p([txt(`${f.icon}  `, { size: 18, font: "Calibri" }), txt(f.name, { bold: true, size: 20, color: C.primary, font: "Calibri" })], { spacing: { before: 160, after: 60 } }));
+      conDecision.forEach(t => {
+        decisionesBlocks.push(p([txt("✓ ", { size: 18, color: C.green, bold: true, font: "Calibri" }), txt(t.tarea, { bold: true, size: 18, color: C.text, font: "Calibri" })], { spacing: { after: 20 }, indent: { left: 200 } }));
+        splitParagraphs(t.decisiones).forEach(line => decisionesBlocks.push(p(txt(line, { size: 18, color: C.text, font: "Calibri" }), { spacing: { after: 40 }, indent: { left: 460 } })));
+      });
+    }
+    if (conPendiente.length) {
+      pendientesBlocks.push(p([txt(`${f.icon}  `, { size: 18, font: "Calibri" }), txt(f.name, { bold: true, size: 20, color: C.primary, font: "Calibri" })], { spacing: { before: 160, after: 60 } }));
+      conPendiente.forEach(t => {
+        pendientesBlocks.push(p([
+          txt("○ ", { size: 18, color: C.orange, bold: true, font: "Calibri" }),
+          txt(t.tarea, { bold: true, size: 18, color: C.text, font: "Calibri" }),
+          txt(`  —  ${t.estado}`, { size: 16, color: estadoColor(t.estado), bold: true, font: "Calibri" }),
+          ...(t.responsable ? [txt(`  ·  ${t.responsable}`, { size: 15, color: C.gray, italics: true, font: "Calibri" })] : []),
+        ], { spacing: { after: 20 }, indent: { left: 200 } }));
+        splitParagraphs(t.notas).forEach(line => pendientesBlocks.push(p(txt(line, { size: 18, color: C.text, font: "Calibri" }), { spacing: { after: 40 }, indent: { left: 460 } })));
+      });
+    }
+  });
+  if (decisionesBlocks.length === 0) decisionesBlocks.push(para("No hay decisiones registradas en las tareas.", { italics: true, color: C.gray }));
+  if (pendientesBlocks.length === 0) pendientesBlocks.push(para("No hay pendientes abiertos registrados en las tareas.", { italics: true, color: C.gray }));
+
   // ===== Detalle por frente (top tasks) =====
   const detailBlocks = [];
   allFrentes.forEach(f => {
@@ -225,7 +255,9 @@ export async function generateMinutaWord({ entry, data, FRENTES }) {
           txt(t.tarea, { size: 20, color: C.text, font: "Calibri" }),
           txt(`  —  ${t.estado}`, { size: 18, color: estadoColor(t.estado), bold: true, font: "Calibri" }),
           ...(t.responsable ? [txt(`  ·  ${t.responsable}`, { size: 16, color: C.gray, italics: true, font: "Calibri" })] : []),
-        ], { spacing: { after: 60 }, indent: { left: 200 } }));
+        ], { spacing: { after: (t.notas || t.decisiones) ? 20 : 60 }, indent: { left: 200 } }));
+        if ((t.notas || "").trim()) detailBlocks.push(p([txt("Pendiente: ", { size: 16, color: C.orange, bold: true, font: "Calibri" }), txt(t.notas.replace(/\n+/g, " "), { size: 16, color: C.gray, font: "Calibri" })], { spacing: { after: 20 }, indent: { left: 460 } }));
+        if ((t.decisiones || "").trim()) detailBlocks.push(p([txt("Decisión: ", { size: 16, color: C.green, bold: true, font: "Calibri" }), txt(t.decisiones.replace(/\n+/g, " "), { size: 16, color: C.gray, font: "Calibri" })], { spacing: { after: 60 }, indent: { left: 460 } }));
       });
     }
   });
@@ -272,6 +304,13 @@ export async function generateMinutaWord({ entry, data, FRENTES }) {
         kpiTable,
         heading("Resumen por Frente", C.primary, 28),
         frentesTable,
+        new Paragraph({ children: [new PageBreak()] }),
+        heading("Decisiones Tomadas", C.primary, 28),
+        para("Decisiones registradas en las tareas de cada frente.", { italics: true, color: C.gray }),
+        ...decisionesBlocks,
+        heading("Pendientes por Resolver", C.primary, 28),
+        para("Asuntos abiertos que requieren seguimiento, agrupados por frente.", { italics: true, color: C.gray }),
+        ...pendientesBlocks,
         new Paragraph({ children: [new PageBreak()] }),
         heading("Detalle Operativo por Frente", C.primary, 28),
         para("Tareas relevantes activas, bloqueadas o pendientes en cada área de trabajo.", { italics: true, color: C.gray }),
