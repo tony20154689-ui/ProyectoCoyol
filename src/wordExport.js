@@ -231,33 +231,72 @@ export async function generateMinutaWord({ entry, data, FRENTES }) {
   if (decisionesBlocks.length === 0) decisionesBlocks.push(para("No hay decisiones registradas en las tareas.", { italics: true, color: C.gray }));
   if (pendientesBlocks.length === 0) pendientesBlocks.push(para("No hay pendientes abiertos registrados en las tareas.", { italics: true, color: C.gray }));
 
-  // ===== Detalle por frente (top tasks) =====
+  // ===== Detalle por frente (informe ejecutivo completo) =====
+  const prioColor = (p2) => p2 === "Alta" ? C.red : p2 === "Media" ? C.orange : C.gray;
+  const sortTasks = (tasks) => [...tasks].sort((a, b) => {
+    const ord = { "Bloqueado": 0, "En Proceso": 1, "Pendiente": 2, "Completado": 3, "N/A": 4 };
+    return (ord[a.estado] ?? 9) - (ord[b.estado] ?? 9);
+  });
+
+  const headCell = (label, w, align = AlignmentType.LEFT) => cell(
+    [p(txt(label, { bold: true, size: 14, color: C.white, font: "Calibri" }), { alignment: align })],
+    { width: { size: w, type: WidthType.PERCENTAGE }, shading: { type: ShadingType.SOLID, color: C.primary, fill: C.primary }, margins: { top: 90, bottom: 90, left: 110, right: 110 } }
+  );
+
   const detailBlocks = [];
-  allFrentes.forEach(f => {
-    const tasks = (data && data[f.id]) || [];
-    const top = tasks.filter(t => t.estado !== "N/A").sort((a, b) => {
-      const ord = { "Bloqueado": 0, "En Proceso": 1, "Pendiente": 2, "Completado": 3 };
-      return (ord[a.estado] ?? 9) - (ord[b.estado] ?? 9);
-    }).slice(0, 6);
-    detailBlocks.push(
-      p([
-        txt(`${f.icon}  `, { size: 22, font: "Calibri" }),
-        txt(f.name, { bold: true, size: 22, color: C.primary, font: "Calibri" }),
-        txt(`    ${Math.round(f.stats.avance)}% · ${f.stats.completados}/${f.stats.total} listas`, { size: 16, color: C.gray, font: "Calibri" }),
-      ], { spacing: { before: 200, after: 100 } })
-    );
-    if (top.length === 0) {
-      detailBlocks.push(para("Sin tareas registradas.", { italics: true, color: C.gray }));
-    } else {
-      top.forEach(t => {
-        detailBlocks.push(p([
-          txt("• ", { size: 20, color: C.gray, font: "Calibri" }),
-          txt(t.tarea, { size: 20, color: C.text, font: "Calibri" }),
-          txt(`  —  ${t.estado}`, { size: 18, color: estadoColor(t.estado), bold: true, font: "Calibri" }),
-          ...(t.responsable ? [txt(`  ·  ${t.responsable}`, { size: 16, color: C.gray, italics: true, font: "Calibri" })] : []),
-        ], { spacing: { after: (t.notas || t.decisiones) ? 20 : 60 }, indent: { left: 200 } }));
-        if ((t.notas || "").trim()) detailBlocks.push(p([txt("Pendiente: ", { size: 16, color: C.orange, bold: true, font: "Calibri" }), txt(t.notas.replace(/\n+/g, " "), { size: 16, color: C.gray, font: "Calibri" })], { spacing: { after: 20 }, indent: { left: 460 } }));
-        if ((t.decisiones || "").trim()) detailBlocks.push(p([txt("Decisión: ", { size: 16, color: C.green, bold: true, font: "Calibri" }), txt(t.decisiones.replace(/\n+/g, " "), { size: 16, color: C.gray, font: "Calibri" })], { spacing: { after: 60 }, indent: { left: 460 } }));
+  allFrentes.forEach((f, fi) => {
+    const tasks = sortTasks((data && data[f.id]) || []);
+    if (fi > 0) detailBlocks.push(p(txt("", {}), { spacing: { before: 200 } }));
+    // Frente heading
+    detailBlocks.push(p([
+      txt(`${f.icon}  `, { size: 24, font: "Calibri" }),
+      txt(f.name, { bold: true, size: 24, color: C.primary, font: "Calibri" }),
+    ], { spacing: { before: 240, after: 40 }, border: { bottom: { color: C.accent, space: 2, style: BorderStyle.SINGLE, size: 8 } } }));
+    detailBlocks.push(p([
+      txt(`Avance ${Math.round(f.stats.avance)}%`, { bold: true, size: 18, color: C.accent, font: "Calibri" }),
+      txt(`   ·   ${f.stats.total} tareas   ·   ${f.stats.completados} listas   ·   ${f.stats.enProceso} en proceso   ·   ${f.stats.pendientes} pendientes   ·   ${f.stats.bloqueados} bloqueadas`, { size: 16, color: C.gray, font: "Calibri" }),
+    ], { spacing: { before: 80, after: 120 } }));
+
+    if (tasks.length === 0) {
+      detailBlocks.push(para("Sin tareas registradas en este frente.", { italics: true, color: C.gray }));
+      return;
+    }
+
+    // Full task table
+    const headerRow = new TableRow({ tableHeader: true, children: [
+      headCell("#", 5, AlignmentType.CENTER),
+      headCell("TAREA", 40),
+      headCell("RESPONSABLE", 20),
+      headCell("PRIOR.", 9, AlignmentType.CENTER),
+      headCell("ESTADO", 13, AlignmentType.CENTER),
+      headCell("AVANCE", 7, AlignmentType.CENTER),
+      headCell("F. LÍMITE", 6, AlignmentType.CENTER),
+    ] });
+    const rows = tasks.map((t, idx) => {
+      const bg = idx % 2 ? C.white : C.lightGray;
+      const sh = { type: ShadingType.SOLID, color: bg, fill: bg };
+      const m = { top: 80, bottom: 80, left: 110, right: 110 };
+      const av = computeAvance(t.estado, t.avance);
+      return new TableRow({ children: [
+        cell([p(txt(String(idx + 1), { size: 15, color: C.gray, font: "Calibri" }), { alignment: AlignmentType.CENTER })], { shading: sh, margins: m }),
+        cell([p(txt(t.tarea || "—", { size: 16, color: C.text, font: "Calibri" }))], { shading: sh, margins: m }),
+        cell([p(txt(t.responsable || "—", { size: 15, color: C.text, font: "Calibri" }))], { shading: sh, margins: m }),
+        cell([p(txt(t.prioridad || "—", { size: 14, color: prioColor(t.prioridad), bold: true, font: "Calibri" }), { alignment: AlignmentType.CENTER })], { shading: sh, margins: m }),
+        cell([p(txt(t.estado || "—", { size: 14, color: estadoColor(t.estado), bold: true, font: "Calibri" }), { alignment: AlignmentType.CENTER })], { shading: sh, margins: m }),
+        cell([p(txt(av !== null ? `${av}%` : "N/A", { size: 15, color: C.accent, bold: true, font: "Calibri" }), { alignment: AlignmentType.CENTER })], { shading: sh, margins: m }),
+        cell([p(txt(t.fechaLimite ? fmtFecha(t.fechaLimite) : "—", { size: 13, color: C.gray, font: "Calibri" }), { alignment: AlignmentType.CENTER })], { shading: sh, margins: m }),
+      ] });
+    });
+    detailBlocks.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: borderAll(C.border, 4), rows: [headerRow, ...rows] }));
+
+    // Pendientes y decisiones del frente
+    const conContenido = tasks.filter(t => (t.notas || "").trim() || (t.decisiones || "").trim());
+    if (conContenido.length) {
+      detailBlocks.push(p(txt("Pendientes y decisiones", { bold: true, size: 17, color: C.primary, font: "Calibri" }), { spacing: { before: 160, after: 60 } }));
+      conContenido.forEach(t => {
+        detailBlocks.push(p(txt(t.tarea, { bold: true, size: 16, color: C.text, font: "Calibri" }), { spacing: { before: 80, after: 20 }, indent: { left: 160 } }));
+        if ((t.notas || "").trim()) splitParagraphs(t.notas).forEach(line => detailBlocks.push(p([txt("○ Pendiente: ", { size: 15, color: C.orange, bold: true, font: "Calibri" }), txt(line, { size: 15, color: C.text, font: "Calibri" })], { spacing: { after: 20 }, indent: { left: 360 } })));
+        if ((t.decisiones || "").trim()) splitParagraphs(t.decisiones).forEach(line => detailBlocks.push(p([txt("✓ Decisión: ", { size: 15, color: C.green, bold: true, font: "Calibri" }), txt(line, { size: 15, color: C.text, font: "Calibri" })], { spacing: { after: 20 }, indent: { left: 360 } })));
       });
     }
   });
