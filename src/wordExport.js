@@ -1,9 +1,14 @@
 import {
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
   HeadingLevel, AlignmentType, WidthType, BorderStyle, ShadingType,
-  Header, Footer, PageNumber, PageBreak,
+  Header, Footer, PageNumber, PageBreak, ImageRun,
 } from "docx";
 import { saveAs } from "file-saver";
+
+const loadImageBuffer = async (url) => {
+  try { const res = await fetch(url); if (!res.ok) return null; return await res.arrayBuffer(); }
+  catch { return null; }
+};
 
 const C = {
   primary: "0C4A6E",
@@ -94,22 +99,28 @@ const splitParagraphs = (text) => (text || "—").split(/\n+/).map(line => line.
 
 export async function generateMinutaWord({ entry, data, FRENTES }) {
   const fecha = fmtFecha(entry.fecha);
+  const coverImg = await loadImageBuffer("/portada.jpg");
 
   // ===== Cover header =====
   const cover = [
+    ...(coverImg ? [new Paragraph({
+      children: [new ImageRun({ data: coverImg, transformation: { width: 624, height: 308 } })],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 240 },
+    })] : []),
     p([
       txt("GRUPO ZEN", { bold: true, size: 16, color: C.gray, font: "Calibri" }),
       txt("    ·    ", { size: 16, color: C.border, font: "Calibri" }),
       txt("DEINDUSTRIAL", { bold: true, size: 16, color: C.gray, font: "Calibri" }),
-    ], { alignment: AlignmentType.CENTER, spacing: { after: 200 } }),
+    ], { alignment: AlignmentType.CENTER, spacing: { after: 160 } }),
     p(txt("ACTA DE REUNIÓN", { bold: true, size: 36, color: C.primary, font: "Calibri" }),
       { alignment: AlignmentType.CENTER, spacing: { after: 80 } }),
     p(txt("Proyecto Bodegas Coyol", { size: 28, color: C.accent, font: "Calibri" }),
       { alignment: AlignmentType.CENTER, spacing: { after: 40 } }),
     p(txt("Ganadera San Lorenzo, S.A.", { italics: true, size: 20, color: C.gray, font: "Calibri" }),
-      { alignment: AlignmentType.CENTER, spacing: { after: 320 } }),
+      { alignment: AlignmentType.CENTER, spacing: { after: 200 } }),
     p(txt(fecha.toUpperCase(), { bold: true, size: 22, color: C.orange, font: "Calibri" }),
-      { alignment: AlignmentType.CENTER, spacing: { after: 480 } }),
+      { alignment: AlignmentType.CENTER, spacing: { after: 320 } }),
   ];
 
   // ===== Información general (table) =====

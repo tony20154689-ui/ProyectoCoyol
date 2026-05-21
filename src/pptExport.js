@@ -45,6 +45,15 @@ const fmtFecha = (iso) => {
 
 const firstLines = (text, max) => (text || "").split(/\n+/).map(s => s.trim()).filter(Boolean).slice(0, max);
 
+const loadImageDataUrl = async (url) => {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise((resolve) => { const r = new FileReader(); r.onloadend = () => resolve(r.result); r.onerror = () => resolve(null); r.readAsDataURL(blob); });
+  } catch { return null; }
+};
+
 export async function generateMinutaPpt({ entry, data, FRENTES }) {
   const pptx = new PptxGenJS();
   pptx.defineLayout({ name: "WIDE", width: 13.33, height: 7.5 });
@@ -60,20 +69,25 @@ export async function generateMinutaPpt({ entry, data, FRENTES }) {
   const bloqueadas = frentes.reduce((a, f) => a + f.stats.bloqueados, 0);
   const avgGlobal = frentes.length ? Math.round(frentes.reduce((a, f) => a + f.stats.avance, 0) / frentes.length) : 0;
 
-  // ============ SLIDE 1 — Portada ============
+  // ============ SLIDE 1 — Portada con imagen ============
+  const coverImg = await loadImageDataUrl("/portada.jpg");
   const s1 = pptx.addSlide();
   s1.background = { color: C.primary };
-  s1.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: W, h: 0.25, fill: { color: C.orange } });
-  s1.addText("BODEGAS COYOL", { x: 0.8, y: 2.4, w: 11.7, h: 1.0, fontSize: 54, bold: true, color: C.white, fontFace: "Calibri" });
-  s1.addText("Reporte Ejecutivo · Avance del Proyecto", { x: 0.8, y: 3.5, w: 11.7, h: 0.6, fontSize: 22, color: C.light, fontFace: "Calibri" });
-  s1.addText(fmtFecha(entry.fecha).toUpperCase(), { x: 0.8, y: 4.3, w: 11.7, h: 0.6, fontSize: 20, bold: true, color: C.orange, fontFace: "Calibri" });
-  s1.addText("GRUPO ZEN   ·   DEINDUSTRIAL   ·   GANADERA SAN LORENZO, S.A.", { x: 0.8, y: 6.6, w: 11.7, h: 0.5, fontSize: 13, color: "94A3B8", fontFace: "Calibri", charSpacing: 1 });
-  // Big progress number
-  s1.addShape(pptx.ShapeType.ellipse, { x: 9.7, y: 1.6, w: 2.8, h: 2.8, fill: { color: C.accent }, line: { color: C.orange, width: 3 } });
+  if (coverImg) {
+    s1.addImage({ data: coverImg, x: 0, y: 0, w: W, h: H, sizing: { type: "cover", w: W, h: H } });
+    // dark gradient band at bottom for legibility
+    s1.addShape(pptx.ShapeType.rect, { x: 0, y: 4.7, w: W, h: 2.8, fill: { color: "000000", transparency: 35 } });
+  }
+  s1.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: W, h: 0.22, fill: { color: C.orange } });
+  s1.addText("BODEGAS COYOL", { x: 0.8, y: 4.95, w: 9.5, h: 0.95, fontSize: 50, bold: true, color: C.white, fontFace: "Calibri", shadow: { type: "outer", color: "000000", blur: 4, offset: 2, angle: 90, opacity: 0.6 } });
+  s1.addText("Reporte Ejecutivo · Avance del Proyecto", { x: 0.82, y: 5.85, w: 9.5, h: 0.5, fontSize: 20, color: C.white, fontFace: "Calibri" });
+  s1.addText(fmtFecha(entry.fecha).toUpperCase(), { x: 0.82, y: 6.4, w: 9.5, h: 0.5, fontSize: 17, bold: true, color: C.orange, fontFace: "Calibri" });
+  // Big progress badge
+  s1.addShape(pptx.ShapeType.ellipse, { x: 10.3, y: 5.0, w: 2.2, h: 2.2, fill: { color: C.accent }, line: { color: C.white, width: 3 } });
   s1.addText([
-    { text: `${avgGlobal}%\n`, options: { fontSize: 48, bold: true, color: C.white, fontFace: "Calibri" } },
-    { text: "AVANCE", options: { fontSize: 13, color: C.light, fontFace: "Calibri", charSpacing: 1 } },
-  ], { x: 9.7, y: 1.6, w: 2.8, h: 2.8, align: "center", valign: "middle" });
+    { text: `${avgGlobal}%\n`, options: { fontSize: 40, bold: true, color: C.white, fontFace: "Calibri" } },
+    { text: "AVANCE", options: { fontSize: 12, color: C.light, fontFace: "Calibri", charSpacing: 1 } },
+  ], { x: 10.3, y: 5.0, w: 2.2, h: 2.2, align: "center", valign: "middle" });
 
   // ============ SLIDE 2 — Tablero (KPIs) ============
   const s2 = pptx.addSlide();
