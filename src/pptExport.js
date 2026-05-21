@@ -70,15 +70,25 @@ export async function generateMinutaPpt({ entry, data, FRENTES }) {
   const avgGlobal = frentes.length ? Math.round(frentes.reduce((a, f) => a + f.stats.avance, 0) / frentes.length) : 0;
 
   // ============ SLIDE 1 — Portada con imagen ============
-  const coverImg = await loadImageDataUrl("/portada.jpg");
+  const [coverImg, logoZen, logoDei] = await Promise.all([
+    loadImageDataUrl("/portada.jpg"),
+    loadImageDataUrl("/logos/grupo-zen.png"),
+    loadImageDataUrl("/logos/deindustrial.png"),
+  ]);
   const s1 = pptx.addSlide();
   s1.background = { color: C.primary };
   if (coverImg) {
     s1.addImage({ data: coverImg, x: 0, y: 0, w: W, h: H, sizing: { type: "cover", w: W, h: H } });
-    // dark gradient band at bottom for legibility
+    // dark band at bottom for legibility
     s1.addShape(pptx.ShapeType.rect, { x: 0, y: 4.7, w: W, h: 2.8, fill: { color: "000000", transparency: 35 } });
   }
   s1.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: W, h: 0.22, fill: { color: C.orange } });
+  // Logo chip (white rounded bar, top-left)
+  if (logoZen || logoDei) {
+    s1.addShape(pptx.ShapeType.roundRect, { x: 0.5, y: 0.45, w: 4.3, h: 1.05, fill: { color: C.white }, line: { type: "none" }, rectRadius: 0.1, shadow: { type: "outer", color: "000000", blur: 6, offset: 2, angle: 90, opacity: 0.3 } });
+    if (logoZen) s1.addImage({ data: logoZen, x: 0.72, y: 0.58, w: 0.8, h: 0.8, sizing: { type: "contain", w: 0.8, h: 0.8 } });
+    if (logoDei) s1.addImage({ data: logoDei, x: 1.75, y: 0.66, w: 2.85, h: 0.62, sizing: { type: "contain", w: 2.85, h: 0.62 } });
+  }
   s1.addText("BODEGAS COYOL", { x: 0.8, y: 4.95, w: 9.5, h: 0.95, fontSize: 50, bold: true, color: C.white, fontFace: "Calibri", shadow: { type: "outer", color: "000000", blur: 4, offset: 2, angle: 90, opacity: 0.6 } });
   s1.addText("Reporte Ejecutivo · Avance del Proyecto", { x: 0.82, y: 5.85, w: 9.5, h: 0.5, fontSize: 20, color: C.white, fontFace: "Calibri" });
   s1.addText(fmtFecha(entry.fecha).toUpperCase(), { x: 0.82, y: 6.4, w: 9.5, h: 0.5, fontSize: 17, bold: true, color: C.orange, fontFace: "Calibri" });

@@ -99,20 +99,31 @@ const splitParagraphs = (text) => (text || "—").split(/\n+/).map(line => line.
 
 export async function generateMinutaWord({ entry, data, FRENTES }) {
   const fecha = fmtFecha(entry.fecha);
-  const coverImg = await loadImageBuffer("/portada.jpg");
+  const [coverImg, logoZen, logoDei] = await Promise.all([
+    loadImageBuffer("/portada.jpg"),
+    loadImageBuffer("/logos/grupo-zen.png"),
+    loadImageBuffer("/logos/deindustrial.png"),
+  ]);
+
+  const logoChildren = [];
+  if (logoZen) logoChildren.push(new ImageRun({ data: logoZen, transformation: { width: 58, height: 58 } }));
+  if (logoZen && logoDei) logoChildren.push(txt("        ", { font: "Calibri" }));
+  if (logoDei) logoChildren.push(new ImageRun({ data: logoDei, transformation: { width: 150, height: 57 } }));
 
   // ===== Cover header =====
   const cover = [
+    ...(logoChildren.length ? [new Paragraph({ children: logoChildren, alignment: AlignmentType.CENTER, spacing: { after: 160 } })] : [
+      p([
+        txt("GRUPO ZEN", { bold: true, size: 16, color: C.gray, font: "Calibri" }),
+        txt("    ·    ", { size: 16, color: C.border, font: "Calibri" }),
+        txt("DEINDUSTRIAL", { bold: true, size: 16, color: C.gray, font: "Calibri" }),
+      ], { alignment: AlignmentType.CENTER, spacing: { after: 160 } }),
+    ]),
     ...(coverImg ? [new Paragraph({
       children: [new ImageRun({ data: coverImg, transformation: { width: 624, height: 308 } })],
       alignment: AlignmentType.CENTER,
       spacing: { after: 240 },
     })] : []),
-    p([
-      txt("GRUPO ZEN", { bold: true, size: 16, color: C.gray, font: "Calibri" }),
-      txt("    ·    ", { size: 16, color: C.border, font: "Calibri" }),
-      txt("DEINDUSTRIAL", { bold: true, size: 16, color: C.gray, font: "Calibri" }),
-    ], { alignment: AlignmentType.CENTER, spacing: { after: 160 } }),
     p(txt("ACTA DE REUNIÓN", { bold: true, size: 36, color: C.primary, font: "Calibri" }),
       { alignment: AlignmentType.CENTER, spacing: { after: 80 } }),
     p(txt("Proyecto Bodegas Coyol", { size: 28, color: C.accent, font: "Calibri" }),
