@@ -1,0 +1,170 @@
+import PptxGenJS from "pptxgenjs";
+
+const C = {
+  primary: "0C4A6E",
+  accent: "0369A1",
+  light: "E0F2FE",
+  orange: "F59E0B",
+  green: "0D9488",
+  red: "DC2626",
+  gray: "64748B",
+  lightGray: "F1F5F9",
+  white: "FFFFFF",
+  dark: "0F172A",
+};
+
+const computeAvance = (estado, manual) => {
+  if (estado === "Completado") return 100;
+  if (estado === "Pendiente") return 0;
+  if (estado === "N/A") return null;
+  return manual ?? 0;
+};
+
+const getFrente = (id, data) => {
+  const tasks = (data && data[id]) || [];
+  const valid = tasks.filter(t => t.estado !== "N/A");
+  const total = valid.length;
+  let completados = 0, enProceso = 0, pendientes = 0, bloqueados = 0, sum = 0, count = 0;
+  valid.forEach(t => {
+    if (t.estado === "Completado") completados++;
+    else if (t.estado === "En Proceso") enProceso++;
+    else if (t.estado === "Pendiente") pendientes++;
+    else if (t.estado === "Bloqueado") bloqueados++;
+    const a = computeAvance(t.estado, t.avance);
+    if (a !== null) { sum += a; count++; }
+  });
+  const avance = count ? Math.round(sum / count) : 0;
+  return { total, completados, enProceso, pendientes, bloqueados, avance };
+};
+
+const fmtFecha = (iso) => {
+  if (!iso) return "";
+  try { return new Date(iso + "T00:00:00").toLocaleDateString("es-CR", { day: "2-digit", month: "long", year: "numeric" }); }
+  catch { return iso; }
+};
+
+const firstLines = (text, max) => (text || "").split(/\n+/).map(s => s.trim()).filter(Boolean).slice(0, max);
+
+export async function generateMinutaPpt({ entry, data, FRENTES }) {
+  const pptx = new PptxGenJS();
+  pptx.defineLayout({ name: "WIDE", width: 13.33, height: 7.5 });
+  pptx.layout = "WIDE";
+  pptx.author = "Bodegas Coyol";
+  pptx.company = "Grupo ZEN · Deindustrial";
+
+  const W = 13.33, H = 7.5;
+  const frentes = (FRENTES || []).map(f => ({ ...f, stats: getFrente(f.id, data) }));
+  const totalTasks = frentes.reduce((a, f) => a + f.stats.total, 0);
+  const completadas = frentes.reduce((a, f) => a + f.stats.completados, 0);
+  const enProceso = frentes.reduce((a, f) => a + f.stats.enProceso, 0);
+  const bloqueadas = frentes.reduce((a, f) => a + f.stats.bloqueados, 0);
+  const avgGlobal = frentes.length ? Math.round(frentes.reduce((a, f) => a + f.stats.avance, 0) / frentes.length) : 0;
+
+  // ============ SLIDE 1 — Portada ============
+  const s1 = pptx.addSlide();
+  s1.background = { color: C.primary };
+  s1.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: W, h: 0.25, fill: { color: C.orange } });
+  s1.addText("BODEGAS COYOL", { x: 0.8, y: 2.4, w: 11.7, h: 1.0, fontSize: 54, bold: true, color: C.white, fontFace: "Calibri" });
+  s1.addText("Reporte Ejecutivo · Avance del Proyecto", { x: 0.8, y: 3.5, w: 11.7, h: 0.6, fontSize: 22, color: C.light, fontFace: "Calibri" });
+  s1.addText(fmtFecha(entry.fecha).toUpperCase(), { x: 0.8, y: 4.3, w: 11.7, h: 0.6, fontSize: 20, bold: true, color: C.orange, fontFace: "Calibri" });
+  s1.addText("GRUPO ZEN   ·   DEINDUSTRIAL   ·   GANADERA SAN LORENZO, S.A.", { x: 0.8, y: 6.6, w: 11.7, h: 0.5, fontSize: 13, color: "94A3B8", fontFace: "Calibri", charSpacing: 1 });
+  // Big progress number
+  s1.addShape(pptx.ShapeType.ellipse, { x: 9.7, y: 1.6, w: 2.8, h: 2.8, fill: { color: C.accent }, line: { color: C.orange, width: 3 } });
+  s1.addText([
+    { text: `${avgGlobal}%\n`, options: { fontSize: 48, bold: true, color: C.white, fontFace: "Calibri" } },
+    { text: "AVANCE", options: { fontSize: 13, color: C.light, fontFace: "Calibri", charSpacing: 1 } },
+  ], { x: 9.7, y: 1.6, w: 2.8, h: 2.8, align: "center", valign: "middle" });
+
+  // ============ SLIDE 2 — Tablero (KPIs) ============
+  const s2 = pptx.addSlide();
+  s2.background = { color: C.white };
+  s2.addText("TABLERO GENERAL", { x: 0.6, y: 0.4, w: 12, h: 0.7, fontSize: 30, bold: true, color: C.primary, fontFace: "Calibri" });
+  s2.addShape(pptx.ShapeType.line, { x: 0.6, y: 1.15, w: 12.1, h: 0, line: { color: C.orange, width: 2.5 } });
+  const kpis = [
+    { l: "AVANCE GLOBAL", v: `${avgGlobal}%`, c: C.accent },
+    { l: "TAREAS LISTAS", v: `${completadas}/${totalTasks}`, c: C.green },
+    { l: "EN PROCESO", v: `${enProceso}`, c: C.orange },
+    { l: "BLOQUEADAS", v: `${bloqueadas}`, c: C.red },
+  ];
+  const cardW = 2.85, gap = 0.28, startX = (W - (cardW * 4 + gap * 3)) / 2;
+  kpis.forEach((k, i) => {
+    const x = startX + i * (cardW + gap);
+    s2.addShape(pptx.ShapeType.roundRect, { x, y: 1.7, w: cardW, h: 2.1, fill: { color: C.lightGray }, line: { color: k.c, width: 2 }, rectRadius: 0.1 });
+    s2.addText(k.v, { x, y: 1.95, w: cardW, h: 1.1, align: "center", fontSize: 46, bold: true, color: k.c, fontFace: "Calibri" });
+    s2.addText(k.l, { x, y: 3.05, w: cardW, h: 0.5, align: "center", fontSize: 13, bold: true, color: C.gray, fontFace: "Calibri", charSpacing: 1 });
+  });
+  // Estado resumen line
+  s2.addText([
+    { text: "Frentes activos: ", options: { bold: true, color: C.primary } },
+    { text: `${frentes.length}`, options: { color: C.dark } },
+    { text: "      Reunión: ", options: { bold: true, color: C.primary } },
+    { text: fmtFecha(entry.fecha), options: { color: C.dark } },
+    { text: "      Participantes: ", options: { bold: true, color: C.primary } },
+    { text: entry.participantes || "—", options: { color: C.dark } },
+  ], { x: 0.6, y: 4.4, w: 12.1, h: 0.6, fontSize: 16, fontFace: "Calibri" });
+
+  // ============ SLIDE 3 — Avance por frente (bar chart) ============
+  const s3 = pptx.addSlide();
+  s3.background = { color: C.white };
+  s3.addText("AVANCE POR FRENTE", { x: 0.6, y: 0.4, w: 12, h: 0.7, fontSize: 30, bold: true, color: C.primary, fontFace: "Calibri" });
+  s3.addShape(pptx.ShapeType.line, { x: 0.6, y: 1.15, w: 12.1, h: 0, line: { color: C.orange, width: 2.5 } });
+  const barTop = 1.5, rowH = (H - barTop - 0.5) / frentes.length;
+  const labelW = 3.6, barX = 4.3, barMaxW = 7.2;
+  frentes.forEach((f, i) => {
+    const y = barTop + i * rowH + (rowH - 0.42) / 2;
+    s3.addText(`${f.icon} ${f.name}`, { x: 0.6, y: y - 0.04, w: labelW, h: 0.5, fontSize: 14, bold: true, color: C.dark, fontFace: "Calibri", valign: "middle" });
+    s3.addShape(pptx.ShapeType.roundRect, { x: barX, y, w: barMaxW, h: 0.42, fill: { color: C.lightGray }, line: { type: "none" }, rectRadius: 0.05 });
+    const fillW = Math.max(0.05, barMaxW * (f.stats.avance / 100));
+    const col = f.stats.bloqueados > 0 ? C.red : f.stats.avance >= 80 ? C.green : f.stats.avance >= 40 ? C.accent : C.orange;
+    s3.addShape(pptx.ShapeType.roundRect, { x: barX, y, w: fillW, h: 0.42, fill: { color: col }, line: { type: "none" }, rectRadius: 0.05 });
+    s3.addText(`${f.stats.avance}%`, { x: barX + barMaxW + 0.15, y: y - 0.04, w: 1.0, h: 0.5, fontSize: 15, bold: true, color: C.primary, fontFace: "Calibri", valign: "middle" });
+  });
+
+  // ============ SLIDE 4 — Decisiones clave ============
+  const s4 = pptx.addSlide();
+  s4.background = { color: C.white };
+  s4.addText("DECISIONES CLAVE", { x: 0.6, y: 0.4, w: 12, h: 0.7, fontSize: 30, bold: true, color: C.primary, fontFace: "Calibri" });
+  s4.addShape(pptx.ShapeType.line, { x: 0.6, y: 1.15, w: 12.1, h: 0, line: { color: C.orange, width: 2.5 } });
+  const decisiones = [];
+  frentes.forEach(f => {
+    const tasks = (data && data[f.id]) || [];
+    tasks.forEach(t => { if ((t.decisiones || "").trim()) firstLines(t.decisiones, 1).forEach(line => decisiones.push({ frente: f.name, text: line })); });
+  });
+  if (entry.acuerdos && entry.acuerdos.trim()) firstLines(entry.acuerdos, 3).forEach(line => decisiones.unshift({ frente: "Reunión", text: line }));
+  const topDec = decisiones.slice(0, 8);
+  if (topDec.length === 0) {
+    s4.addText("Sin decisiones registradas en este periodo.", { x: 0.6, y: 1.6, w: 12, h: 0.6, fontSize: 18, italic: true, color: C.gray, fontFace: "Calibri" });
+  } else {
+    s4.addText(topDec.map(d => ({
+      text: `${d.text}`,
+      options: { bullet: { code: "2713", indent: 20 }, color: C.dark, fontSize: 18, fontFace: "Calibri", paraSpaceAfter: 10 },
+    })), { x: 0.7, y: 1.5, w: 12, h: 5.6, valign: "top" });
+  }
+
+  // ============ SLIDE 5 — Pendientes / Próximos pasos ============
+  const s5 = pptx.addSlide();
+  s5.background = { color: C.primary };
+  s5.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: W, h: 0.25, fill: { color: C.orange } });
+  s5.addText("PRÓXIMOS PASOS", { x: 0.6, y: 0.5, w: 12, h: 0.7, fontSize: 30, bold: true, color: C.white, fontFace: "Calibri" });
+  const pendientes = [];
+  if (entry.compromisos && entry.compromisos.trim()) firstLines(entry.compromisos, 3).forEach(line => pendientes.push(line));
+  frentes.forEach(f => {
+    const tasks = (data && data[f.id]) || [];
+    tasks.forEach(t => { if ((t.notas || "").trim() && t.estado !== "Completado") firstLines(t.notas, 1).forEach(line => pendientes.push(`[${f.name}] ${line}`)); });
+  });
+  const topPend = pendientes.slice(0, 8);
+  if (topPend.length === 0) {
+    s5.addText("Sin pendientes abiertos.", { x: 0.6, y: 1.6, w: 12, h: 0.6, fontSize: 18, italic: true, color: C.light, fontFace: "Calibri" });
+  } else {
+    s5.addText(topPend.map(t => ({
+      text: t,
+      options: { bullet: { code: "25B8", indent: 20 }, color: C.white, fontSize: 18, fontFace: "Calibri", paraSpaceAfter: 10 },
+    })), { x: 0.7, y: 1.5, w: 12, h: 5.2, valign: "top" });
+  }
+  if (entry.responsable && entry.responsable.trim()) {
+    s5.addText(`Responsable de seguimiento: ${entry.responsable}${entry.fechaLimite ? "  ·  Fecha límite: " + fmtFecha(entry.fechaLimite) : ""}`, { x: 0.6, y: 6.8, w: 12.1, h: 0.5, fontSize: 13, color: "94A3B8", fontFace: "Calibri" });
+  }
+
+  const fileName = `Presentacion-Coyol-${entry.fecha || new Date().toISOString().split("T")[0]}.pptx`;
+  await pptx.writeFile({ fileName });
+}

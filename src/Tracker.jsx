@@ -893,6 +893,7 @@ const BitacoraView = ({ data, setData, isMobile }) => {
   const entries = data.bitacora || [];
   const [sortDir, setSortDir] = useState("desc");
   const [generating, setGenerating] = useState(null);
+  const [generatingPpt, setGeneratingPpt] = useState(null);
   const sortedEntries = useMemo(() => {
     const arr = [...entries];
     arr.sort((a, b) => {
@@ -914,6 +915,15 @@ const BitacoraView = ({ data, setData, isMobile }) => {
     }
     catch (err) { alert("Error al generar el Word: " + (err?.message || err)); }
     finally { setGenerating(null); }
+  };
+  const downloadPpt = async (entry) => {
+    setGeneratingPpt(entry.id);
+    try {
+      const { generateMinutaPpt } = await import("./pptExport.js");
+      await generateMinutaPpt({ entry, data, FRENTES });
+    }
+    catch (err) { alert("Error al generar el PowerPoint: " + (err?.message || err)); }
+    finally { setGeneratingPpt(null); }
   };
   return (
     <div>
@@ -937,7 +947,10 @@ const BitacoraView = ({ data, setData, isMobile }) => {
             </div>
             <div style={{ display: "flex", gap: 6 }}>
               <button onClick={() => downloadDocx(e)} disabled={generating === e.id} title="Descargar acta en Word" style={{ background: generating === e.id ? "#cbd5e1" : "linear-gradient(135deg, #0369a1, #0284c7)", color: "#fff", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: generating === e.id ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
-                {generating === e.id ? "⏳ Generando…" : "📄 Word"}
+                {generating === e.id ? "⏳…" : "📄 Word"}
+              </button>
+              <button onClick={() => downloadPpt(e)} disabled={generatingPpt === e.id} title="Descargar presentación PowerPoint (resumen ejecutivo, 5 filminas)" style={{ background: generatingPpt === e.id ? "#cbd5e1" : "linear-gradient(135deg, #ea580c, #f59e0b)", color: "#fff", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: generatingPpt === e.id ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
+                {generatingPpt === e.id ? "⏳…" : "📊 PPT"}
               </button>
               <button onClick={() => del(e.id)} title="Eliminar reunión" style={{ background: "#fff", border: "1px solid #fecaca", borderRadius: 6, color: "#dc2626", cursor: "pointer", fontSize: 13, padding: "6px 11px", fontWeight: 700 }}>✕</button>
             </div>
