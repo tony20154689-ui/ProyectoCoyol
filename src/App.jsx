@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase.js";
 import Login from "./Login.jsx";
 import Tracker, { initialData } from "./Tracker.jsx";
@@ -46,29 +46,27 @@ export default function App() {
 
   useEffect(() => {
     if (!user) { setDataLocal(null); dataRef.current = null; return; }
-    let unsub;
-    (async () => {
-      try {
-        const snap = await getDoc(DOC_REF);
-        if (!snap.exists()) {
+    let seeded = false;
+    const unsub = onSnapshot(DOC_REF, async (s) => {
+      if (!s.exists()) {
+        if (seeded) return;
+        seeded = true;
+        try {
           const seed = initialData();
           await setDoc(DOC_REF, { data: seed, updatedAt: serverTimestamp(), updatedBy: user.email || user.uid });
-        }
-        unsub = onSnapshot(DOC_REF, (s) => {
-          const d = s.data();
-          if (!d?.data) return;
-          if (writingRef.current) {
-            queuedSnapshotRef.current = d.data;
-          } else {
-            dataRef.current = d.data;
-            setDataLocal(d.data);
-          }
-        }, (err) => setLoadError("Error leyendo datos: " + err.message));
-      } catch (err) {
-        setLoadError("No se pudo cargar la base de datos: " + err.message);
+        } catch (err) { setLoadError("No se pudo inicializar la base de datos: " + err.message); }
+        return; // next snapshot delivers the seeded data
       }
-    })();
-    return () => { if (unsub) unsub(); };
+      const d = s.data();
+      if (!d?.data) return;
+      if (writingRef.current) {
+        queuedSnapshotRef.current = d.data;
+      } else {
+        dataRef.current = d.data;
+        setDataLocal(d.data);
+      }
+    }, (err) => setLoadError("Error leyendo datos: " + err.message));
+    return () => unsub();
   }, [user]);
 
   const flushWrite = async () => {
