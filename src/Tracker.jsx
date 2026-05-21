@@ -928,28 +928,37 @@ const BitacoraView = ({ data, setData, isMobile }) => {
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {sortedEntries.map(e => (<div key={e.id} style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 12 : 18, border: "1px solid #e2e8f0", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-          <div style={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 4 }}>
-            <button onClick={() => downloadDocx(e)} disabled={generating === e.id} title="Descargar acta en Word" style={{ background: generating === e.id ? "#cbd5e1" : "linear-gradient(135deg, #0369a1, #0284c7)", color: "#fff", border: "none", borderRadius: 6, padding: "5px 11px", fontSize: 11, fontWeight: 700, cursor: generating === e.id ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-              {generating === e.id ? "⏳ Generando…" : "📄 Word"}
-            </button>
-            <button onClick={() => del(e.id)} style={{ background: "#fff", border: "1px solid #fecaca", borderRadius: 6, color: "#dc2626", cursor: "pointer", fontSize: 13, padding: "4px 10px", fontWeight: 700 }}>✕</button>
+        {sortedEntries.map(e => (<div key={e.id} style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 12 : 18, border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 14, paddingBottom: 10, borderBottom: "1px solid #f1f5f9" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 16 }}>📅</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{e.fecha ? new Date(e.fecha + "T00:00:00").toLocaleDateString("es-CR", { day: "2-digit", month: "long", year: "numeric" }) : "Reunión sin fecha"}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: e.cumplido ? "#dcfce7" : "#fef3c7", color: e.cumplido ? "#15803d" : "#92400e" }}>{e.cumplido ? "✓ Cumplido" : "Pendiente"}</span>
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={() => downloadDocx(e)} disabled={generating === e.id} title="Descargar acta en Word" style={{ background: generating === e.id ? "#cbd5e1" : "linear-gradient(135deg, #0369a1, #0284c7)", color: "#fff", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: generating === e.id ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
+                {generating === e.id ? "⏳ Generando…" : "📄 Word"}
+              </button>
+              <button onClick={() => del(e.id)} title="Eliminar reunión" style={{ background: "#fff", border: "1px solid #fecaca", borderRadius: 6, color: "#dc2626", cursor: "pointer", fontSize: 13, padding: "6px 11px", fontWeight: 700 }}>✕</button>
+            </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 8, marginBottom: 10 }}>
-            <div><label style={s.lbl}>Fecha</label><input type="date" value={e.fecha} onChange={ev => upd(e.id, "fecha", ev.target.value)} style={s.inp} /></div>
-            <div><label style={s.lbl}>Participantes</label><LiveInput value={e.participantes} onChange={ev => upd(e.id, "participantes", ev.target.value)} style={s.inp} /></div>
-            <div><label style={s.lbl}>Frente(s)</label><LiveInput value={e.frentes} onChange={ev => upd(e.id, "frentes", ev.target.value)} style={s.inp} /></div>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
+            <div><label style={s.lbl}>Fecha</label><input type="date" value={e.fecha} onChange={ev => upd(e.id, "fecha", ev.target.value)} style={{ ...s.inp, boxSizing: "border-box" }} /></div>
+            <div><label style={s.lbl}>Participantes</label><LiveInput value={e.participantes} onChange={ev => upd(e.id, "participantes", ev.target.value)} style={{ ...s.inp, boxSizing: "border-box" }} /></div>
+            <div><label style={s.lbl}>Frente(s)</label><LiveInput value={e.frentes} onChange={ev => upd(e.id, "frentes", ev.target.value)} style={{ ...s.inp, boxSizing: "border-box" }} /></div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 8, marginBottom: 8 }}>
-            <div><label style={s.lbl}>Acuerdos</label><LiveTextarea value={e.acuerdos} onChange={ev => upd(e.id, "acuerdos", ev.target.value)} rows={3} style={{ ...s.inp, resize: "vertical" }} /></div>
-            <div><label style={s.lbl}>Compromisos</label><LiveTextarea value={e.compromisos} onChange={ev => upd(e.id, "compromisos", ev.target.value)} rows={3} style={{ ...s.inp, resize: "vertical" }} /></div>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10, marginBottom: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column" }}><label style={s.lbl}>Acuerdos</label><LiveTextarea value={e.acuerdos} onChange={ev => upd(e.id, "acuerdos", ev.target.value)} rows={4} style={{ ...s.inp, boxSizing: "border-box", minHeight: 92, resize: "vertical" }} /></div>
+            <div style={{ display: "flex", flexDirection: "column" }}><label style={s.lbl}>Compromisos</label><LiveTextarea value={e.compromisos} onChange={ev => upd(e.id, "compromisos", ev.target.value)} rows={4} style={{ ...s.inp, boxSizing: "border-box", minHeight: 92, resize: "vertical" }} /></div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr auto", gap: 8, alignItems: "end" }}>
-            <div><label style={s.lbl}>Responsable</label><LiveInput value={e.responsable} onChange={ev => upd(e.id, "responsable", ev.target.value)} style={s.inp} /></div>
-            <div><label style={s.lbl}>Fecha límite</label><input type="date" value={e.fechaLimite} onChange={ev => upd(e.id, "fechaLimite", ev.target.value)} style={s.inp} /></div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, paddingBottom: 4 }}>
-              <input type="checkbox" checked={e.cumplido} onChange={ev => upd(e.id, "cumplido", ev.target.checked)} style={{ accentColor: "#0369a1", width: 18, height: 18 }} />
-              <span style={{ fontSize: 12, color: e.cumplido ? "#0369a1" : "#94a3b8", fontWeight: 600 }}>{e.cumplido ? "Cumplido" : "Pend."}</span>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 10 }}>
+            <div><label style={s.lbl}>Responsable</label><LiveInput value={e.responsable} onChange={ev => upd(e.id, "responsable", ev.target.value)} style={{ ...s.inp, boxSizing: "border-box" }} /></div>
+            <div><label style={s.lbl}>Fecha límite</label><input type="date" value={e.fechaLimite} onChange={ev => upd(e.id, "fechaLimite", ev.target.value)} style={{ ...s.inp, boxSizing: "border-box" }} /></div>
+            <div><label style={s.lbl}>Estado</label>
+              <button onClick={() => upd(e.id, "cumplido", !e.cumplido)} style={{ width: "100%", boxSizing: "border-box", display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, border: `1px solid ${e.cumplido ? "#86efac" : "#cbd5e1"}`, background: e.cumplido ? "#f0fdf4" : "#f8fafc", cursor: "pointer", fontSize: 13, fontWeight: 600, color: e.cumplido ? "#15803d" : "#64748b" }}>
+                <span style={{ width: 16, height: 16, borderRadius: 4, border: `1px solid ${e.cumplido ? "#15803d" : "#cbd5e1"}`, background: e.cumplido ? "#15803d" : "#fff", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11 }}>{e.cumplido ? "✓" : ""}</span>
+                {e.cumplido ? "Cumplido" : "Pendiente"}
+              </button>
             </div>
           </div>
         </div>))}
