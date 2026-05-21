@@ -44,6 +44,7 @@ const fmtFecha = (iso) => {
 };
 
 const firstLines = (text, max) => (text || "").split(/\n+/).map(s => s.trim()).filter(Boolean).slice(0, max);
+const oneLine = (text) => (text || "").split(/\n+/).map(s => s.trim()).filter(Boolean).join(" — ");
 
 const loadImageDataUrl = async (url) => {
   try {
@@ -150,12 +151,12 @@ export async function generateMinutaPpt({ entry, data, FRENTES }) {
   s4.addText("DECISIONES CLAVE", { x: 0.6, y: 0.4, w: 12, h: 0.7, fontSize: 30, bold: true, color: C.primary, fontFace: "Calibri" });
   s4.addShape(pptx.ShapeType.line, { x: 0.6, y: 1.15, w: 12.1, h: 0, line: { color: C.orange, width: 2.5 } });
   const decisiones = [];
+  if (entry.acuerdos && oneLine(entry.acuerdos)) decisiones.push({ frente: "Reunión", text: oneLine(entry.acuerdos) });
   frentes.forEach(f => {
     const tasks = (data && data[f.id]) || [];
-    tasks.forEach(t => { if ((t.decisiones || "").trim()) firstLines(t.decisiones, 1).forEach(line => decisiones.push({ frente: f.name, text: line })); });
+    tasks.forEach(t => { const d = oneLine(t.decisiones); if (d) decisiones.push({ frente: f.name, text: d }); });
   });
-  if (entry.acuerdos && entry.acuerdos.trim()) firstLines(entry.acuerdos, 3).forEach(line => decisiones.unshift({ frente: "Reunión", text: line }));
-  const topDec = decisiones.slice(0, 8);
+  const topDec = decisiones.slice(0, 7);
   if (topDec.length === 0) {
     s4.addText("Sin decisiones registradas en este periodo.", { x: 0.6, y: 1.6, w: 12, h: 0.6, fontSize: 18, italic: true, color: C.gray, fontFace: "Calibri" });
   } else {
@@ -171,12 +172,12 @@ export async function generateMinutaPpt({ entry, data, FRENTES }) {
   s5.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: W, h: 0.25, fill: { color: C.orange } });
   s5.addText("PRÓXIMOS PASOS", { x: 0.6, y: 0.5, w: 12, h: 0.7, fontSize: 30, bold: true, color: C.white, fontFace: "Calibri" });
   const pendientes = [];
-  if (entry.compromisos && entry.compromisos.trim()) firstLines(entry.compromisos, 3).forEach(line => pendientes.push(line));
+  if (entry.compromisos && oneLine(entry.compromisos)) pendientes.push(oneLine(entry.compromisos));
   frentes.forEach(f => {
     const tasks = (data && data[f.id]) || [];
-    tasks.forEach(t => { if ((t.notas || "").trim() && t.estado !== "Completado") firstLines(t.notas, 1).forEach(line => pendientes.push(`[${f.name}] ${line}`)); });
+    tasks.forEach(t => { const n = oneLine(t.notas); if (n && t.estado !== "Completado") pendientes.push(`[${f.name}] ${n}`); });
   });
-  const topPend = pendientes.slice(0, 8);
+  const topPend = pendientes.slice(0, 7);
   if (topPend.length === 0) {
     s5.addText("Sin pendientes abiertos.", { x: 0.6, y: 1.6, w: 12, h: 0.6, fontSize: 18, italic: true, color: C.light, fontFace: "Calibri" });
   } else {
