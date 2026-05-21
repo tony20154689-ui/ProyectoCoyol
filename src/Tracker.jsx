@@ -143,6 +143,38 @@ const LiveInput = ({ value, onChange, style, type = "text", ...rest }) => {
   );
 };
 
+const MultiSelectDropdown = ({ label, options, selected, onToggle, color = "#0369a1" }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+  const count = selected.length;
+  const active = count > 0;
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button onClick={() => setOpen(o => !o)} style={{ background: active ? color : "#fff", color: active ? "#fff" : "#64748b", border: `1px solid ${active ? color : "#e2e8f0"}`, borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
+        {label}{active ? ` · ${count}` : ""} <span style={{ fontSize: 9 }}>▼</span>
+      </button>
+      {open && (
+        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 200, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.15)", minWidth: 190, maxHeight: 280, overflow: "auto", padding: 6 }}>
+          {options.length === 0 ? <div style={{ padding: "8px 10px", fontSize: 12, color: "#94a3b8" }}>Sin opciones</div> : options.map(opt => {
+            const checked = selected.includes(opt);
+            return (
+              <label key={opt} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 9px", cursor: "pointer", borderRadius: 6, background: checked ? "#f0f9ff" : "transparent" }}>
+                <input type="checkbox" checked={checked} onChange={() => onToggle(opt)} style={{ accentColor: color, width: 15, height: 15 }} />
+                <span style={{ fontSize: 12, color: "#0f172a" }}>{opt}</span>
+              </label>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const useIsMobile = () => {
   const [m, setM] = useState(window.innerWidth < 768);
   useEffect(() => { const h = () => setM(window.innerWidth < 768); window.addEventListener("resize", h); return () => window.removeEventListener("resize", h); }, []);
@@ -761,8 +793,7 @@ const FrenteView = ({ frenteId, data, setData, isMobile }) => {
   const tasks = data[frenteId] || [];
   const stats = getFrente(frenteId, data);
   const [dragOverIdx, setDragOverIdx] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({ search: "", areas: [], responsables: [], prioridades: [], estados: [], soloVencidas: false });
+  const [filters, setFilters] = useState({ search: "", areas: [], responsables: [], prioridades: [], estados: [], contenido: [], soloVencidas: false });
   const [sortBy, setSortBy] = useState("");
   const upd = (tid, f, v) => setData(prev => { const nd = { ...prev }; nd[frenteId] = nd[frenteId].map(t => { if (t.id !== tid) return t; const u = { ...t, [f]: v }; if (f === "estado") u.avance = computeAvance(v, t.avance) ?? t.avance; return u; }); return nd; });
   const add = () => { const mx = tasks.length ? Math.max(...tasks.map(t => t.id)) : 0; setData(prev => ({ ...prev, [frenteId]: [...prev[frenteId], { id: mx+1, area: "", tarea: "Nueva tarea", responsable: "", prioridad: "Media", estado: "Pendiente", fechaLimite: "", avance: 0, notas: "", decisiones: "", archivos: [] }] })); };
@@ -772,9 +803,10 @@ const FrenteView = ({ frenteId, data, setData, isMobile }) => {
 
   const uniqueAreas = useMemo(() => [...new Set(tasks.map(t => t.area).filter(Boolean))].sort(), [tasks]);
   const uniqueResp = useMemo(() => [...new Set(tasks.map(t => t.responsable).filter(Boolean))].sort(), [tasks]);
+  const CONTENIDO_OPTS = ["Con pendientes", "Sin pendientes", "Con decisiones", "Sin decisiones"];
   const toggleIn = (key, val) => setFilters(prev => ({ ...prev, [key]: prev[key].includes(val) ? prev[key].filter(x => x !== val) : [...prev[key], val] }));
-  const filtersActive = !!(filters.search || filters.areas.length || filters.responsables.length || filters.prioridades.length || filters.estados.length || filters.soloVencidas || sortBy);
-  const clearFilters = () => { setFilters({ search: "", areas: [], responsables: [], prioridades: [], estados: [], soloVencidas: false }); setSortBy(""); };
+  const filtersActive = !!(filters.search || filters.areas.length || filters.responsables.length || filters.prioridades.length || filters.estados.length || filters.contenido.length || filters.soloVencidas || sortBy);
+  const clearFilters = () => { setFilters({ search: "", areas: [], responsables: [], prioridades: [], estados: [], contenido: [], soloVencidas: false }); setSortBy(""); };
 
   const visible = useMemo(() => {
     let arr = tasks.map((t, originalIdx) => ({ t, originalIdx }));
@@ -784,6 +816,10 @@ const FrenteView = ({ frenteId, data, setData, isMobile }) => {
     if (f.responsables.length) arr = arr.filter(({ t }) => f.responsables.includes(t.responsable));
     if (f.prioridades.length) arr = arr.filter(({ t }) => f.prioridades.includes(t.prioridad));
     if (f.estados.length) arr = arr.filter(({ t }) => f.estados.includes(t.estado));
+    if (f.contenido.includes("Con pendientes")) arr = arr.filter(({ t }) => (t.notas || "").trim());
+    if (f.contenido.includes("Sin pendientes")) arr = arr.filter(({ t }) => !(t.notas || "").trim());
+    if (f.contenido.includes("Con decisiones")) arr = arr.filter(({ t }) => (t.decisiones || "").trim());
+    if (f.contenido.includes("Sin decisiones")) arr = arr.filter(({ t }) => !(t.decisiones || "").trim());
     if (f.soloVencidas) arr = arr.filter(({ t }) => t.fechaLimite && t.estado !== "Completado" && new Date(t.fechaLimite) < new Date());
     const av = (t) => computeAvance(t.estado, t.avance) ?? -1;
     if (sortBy === "avance-desc") arr.sort((a, b) => av(b.t) - av(a.t));
@@ -795,10 +831,6 @@ const FrenteView = ({ frenteId, data, setData, isMobile }) => {
     else if (sortBy === "area") arr.sort((a, b) => (a.t.area || "").localeCompare(b.t.area || ""));
     return arr;
   }, [tasks, filters, sortBy]);
-
-  const chip = (active, label, onClick, color = "#0369a1") => (
-    <button onClick={onClick} style={{ background: active ? color : "#fff", color: active ? "#fff" : "#64748b", border: `1px solid ${active ? color : "#e2e8f0"}`, borderRadius: 999, padding: "4px 11px", fontSize: 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{label}</button>
-  );
 
   return (
     <div>
@@ -816,9 +848,15 @@ const FrenteView = ({ frenteId, data, setData, isMobile }) => {
       {/* Filter bar */}
       <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e2e8f0", padding: "8px 10px", marginBottom: 10 }}>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <input value={filters.search} onChange={e => setFilters(p => ({ ...p, search: e.target.value }))} placeholder="🔍 Buscar en tarea, área, responsable, pendientes, decisiones…" style={{ flex: 1, minWidth: 200, padding: "8px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 12, outline: "none" }} />
+          <input value={filters.search} onChange={e => setFilters(p => ({ ...p, search: e.target.value }))} placeholder="🔍 Buscar…" style={{ flex: 1, minWidth: 160, padding: "8px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 12, outline: "none" }} />
+          <MultiSelectDropdown label="Estado" options={ESTADOS} selected={filters.estados} onToggle={(v) => toggleIn("estados", v)} color="#0369a1" />
+          <MultiSelectDropdown label="Prioridad" options={PRIORIDADES} selected={filters.prioridades} onToggle={(v) => toggleIn("prioridades", v)} color="#7c3aed" />
+          <MultiSelectDropdown label="Área" options={uniqueAreas} selected={filters.areas} onToggle={(v) => toggleIn("areas", v)} color="#0d9488" />
+          <MultiSelectDropdown label="Responsable" options={uniqueResp} selected={filters.responsables} onToggle={(v) => toggleIn("responsables", v)} color="#ea580c" />
+          <MultiSelectDropdown label="Contenido" options={CONTENIDO_OPTS} selected={filters.contenido} onToggle={(v) => toggleIn("contenido", v)} color="#0891b2" />
+          <button onClick={() => setFilters(p => ({ ...p, soloVencidas: !p.soloVencidas }))} style={{ background: filters.soloVencidas ? "#dc2626" : "#fff", color: filters.soloVencidas ? "#fff" : "#64748b", border: `1px solid ${filters.soloVencidas ? "#dc2626" : "#e2e8f0"}`, borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>⏰ Vencidas</button>
           <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 12, background: "#fff", cursor: "pointer" }}>
-            <option value="">Orden manual</option>
+            <option value="">↕ Orden manual</option>
             <option value="estado">Estado</option>
             <option value="prioridad">Prioridad</option>
             <option value="avance-desc">Avance ↓</option>
@@ -827,30 +865,8 @@ const FrenteView = ({ frenteId, data, setData, isMobile }) => {
             <option value="fecha-desc">F. Límite ↓</option>
             <option value="area">Área A-Z</option>
           </select>
-          <button onClick={() => setShowFilters(s => !s)} style={{ background: showFilters || filtersActive ? "#0369a1" : "#f1f5f9", color: showFilters || filtersActive ? "#fff" : "#64748b", border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⚙ Filtros{filtersActive ? " ●" : ""}</button>
           {filtersActive && <button onClick={clearFilters} style={{ background: "#fff", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Limpiar</button>}
         </div>
-        {showFilters && (
-          <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px dashed #e2e8f0", display: "flex", flexDirection: "column", gap: 10 }}>
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 5 }}>Estado</div>
-              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>{ESTADOS.map(e => chip(filters.estados.includes(e), e, () => toggleIn("estados", e)))}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 5 }}>Prioridad</div>
-              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>{PRIORIDADES.map(p2 => chip(filters.prioridades.includes(p2), p2, () => toggleIn("prioridades", p2), "#7c3aed"))}</div>
-            </div>
-            {uniqueAreas.length > 0 && <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 5 }}>Área</div>
-              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>{uniqueAreas.map(a => chip(filters.areas.includes(a), a, () => toggleIn("areas", a), "#0d9488"))}</div>
-            </div>}
-            {uniqueResp.length > 0 && <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 5 }}>Responsable</div>
-              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>{uniqueResp.map(r => chip(filters.responsables.includes(r), r, () => toggleIn("responsables", r), "#ea580c"))}</div>
-            </div>}
-            <div>{chip(filters.soloVencidas, "⏰ Solo vencidas", () => setFilters(p => ({ ...p, soloVencidas: !p.soloVencidas })), "#dc2626")}</div>
-          </div>
-        )}
         <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>Mostrando {visible.length} de {tasks.length} tareas{filtersActive ? " · (reordenar deshabilitado con filtros activos)" : ""}</div>
       </div>
 
