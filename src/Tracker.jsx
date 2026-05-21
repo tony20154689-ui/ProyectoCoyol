@@ -358,7 +358,7 @@ const fmtBytes = (b) => { if (!b && b !== 0) return ""; if (b < 1024) return b +
 const fmtDate = (ts) => { if (!ts) return ""; const d = new Date(ts); return d.toLocaleDateString("es-CR", { day: "2-digit", month: "short", year: "numeric" }); };
 const isImage = (name = "") => /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(name);
 
-const NotesModal = ({ title, value, onSave, onClose }) => {
+const NotesModal = ({ title, value, onSave, onClose, heading = "Anotaciones", icon = "📝", placeholder = "Escribí tus notas aquí…" }) => {
   const [text, setText] = useState(value || "");
   const dirty = text !== (value || "");
   const handleClose = () => {
@@ -369,15 +369,15 @@ const NotesModal = ({ title, value, onSave, onClose }) => {
     <div onClick={handleClose} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", backdropFilter: "blur(4px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 720, maxHeight: "90vh", display: "flex", flexDirection: "column", boxShadow: "0 25px 60px rgba(0,0,0,0.3)" }}>
         <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 20 }}>📝</span>
+          <span style={{ fontSize: 20 }}>{icon}</span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", fontFamily: "'Outfit', sans-serif" }}>Anotaciones</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", fontFamily: "'Outfit', sans-serif" }}>{heading}</div>
             <div style={{ fontSize: 11, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title || ""}</div>
           </div>
           <button onClick={handleClose} style={{ background: "#f1f5f9", border: "none", borderRadius: 8, width: 32, height: 32, fontSize: 16, cursor: "pointer", color: "#64748b" }}>✕</button>
         </div>
         <div style={{ flex: 1, padding: 20, background: "#f8fafc", overflow: "auto" }}>
-          <textarea autoFocus value={text} onChange={(e) => setText(e.target.value)} placeholder="Escribí tus notas aquí…" style={{ width: "100%", minHeight: 320, padding: 14, border: "1px solid #e2e8f0", borderRadius: 10, fontSize: 14, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5, outline: "none", resize: "vertical", background: "#fff", color: "#0f172a" }} />
+          <textarea autoFocus value={text} onChange={(e) => setText(e.target.value)} placeholder={placeholder} style={{ width: "100%", minHeight: 320, padding: 14, border: "1px solid #e2e8f0", borderRadius: 10, fontSize: 14, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5, outline: "none", resize: "vertical", background: "#fff", color: "#0f172a" }} />
           <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>{text.length} caracteres · {text.split(/\s+/).filter(Boolean).length} palabras</div>
         </div>
         <div style={{ padding: "12px 20px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end", gap: 8 }}>
@@ -661,7 +661,8 @@ const TaskCard = ({ t, i, onUpdate, onDelete, onMove, total }) => {
                   : <div style={{ ...s.inp, background: "#f1f5f9", color: "#64748b" }}>{eff !== null ? `${eff}% (auto)` : "N/A"}</div>}
               </div>
             </div>
-            <div><label style={s.lbl}>Notas</label><textarea value={t.notas} onChange={e => onUpdate("notas", e.target.value)} rows={3} style={{ ...s.inp, resize: "vertical" }} /></div>
+            <div><label style={s.lbl}>📌 Pendientes</label><LiveTextarea value={t.notas} onChange={e => onUpdate("notas", e.target.value)} rows={3} style={{ ...s.inp, resize: "vertical" }} /></div>
+            <div><label style={s.lbl}>✅ Decisiones</label><LiveTextarea value={t.decisiones} onChange={e => onUpdate("decisiones", e.target.value)} rows={3} style={{ ...s.inp, resize: "vertical" }} /></div>
             <div><label style={s.lbl}>Archivos adjuntos</label><FileAttachments archivos={t.archivos||[]} onChange={v => onUpdate("archivos", v)} title={t.tarea} /></div>
             <button onClick={onDelete} style={{ background: "#fff", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, padding: "10px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Eliminar tarea</button>
           </div>
@@ -671,8 +672,9 @@ const TaskCard = ({ t, i, onUpdate, onDelete, onMove, total }) => {
   );
 };
 
-const TaskRow = ({ t, i, onUpdate, onDelete, onMove, dragOverIdx, setDragOverIdx, total }) => {
+const TaskRow = ({ t, i, onUpdate, onDelete, onMove, dragOverIdx, setDragOverIdx, total, canReorder = true }) => {
   const [notesOpen, setNotesOpen] = useState(false);
+  const [decisionesOpen, setDecisionesOpen] = useState(false);
   const eff = computeAvance(t.estado, t.avance);
   const isOverdue = t.fechaLimite && t.estado !== "Completado" && new Date(t.fechaLimite) < new Date();
   const isDragOver = dragOverIdx === i;
@@ -681,9 +683,9 @@ const TaskRow = ({ t, i, onUpdate, onDelete, onMove, dragOverIdx, setDragOverIdx
   const onDragLeave = () => { if (dragOverIdx === i) setDragOverIdx(null); };
   const onDrop = (e) => { e.preventDefault(); const from = parseInt(e.dataTransfer.getData("text/plain"), 10); if (!isNaN(from) && from !== i) onMove(from, i); setDragOverIdx(null); };
   return (
-    <tr onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop} style={{ background: isOverdue ? "#fef2f2" : i % 2 ? "#f8fafc" : "#fff", borderBottom: "1px solid #e2e8f0", borderTop: isDragOver ? "2px solid #0369a1" : undefined }}>
+    <tr onDragOver={canReorder ? onDragOver : undefined} onDragLeave={canReorder ? onDragLeave : undefined} onDrop={canReorder ? onDrop : undefined} style={{ background: isOverdue ? "#fef2f2" : i % 2 ? "#f8fafc" : "#fff", borderBottom: "1px solid #e2e8f0", borderTop: isDragOver ? "2px solid #0369a1" : undefined }}>
       <td style={{ padding: "7px 6px", whiteSpace: "nowrap" }}>
-        <span draggable onDragStart={onDragStart} title="Arrastrar para reordenar" style={{ cursor: "grab", color: "#cbd5e1", fontSize: 14, marginRight: 4, userSelect: "none" }}>⋮⋮</span>
+        {canReorder && <span draggable onDragStart={onDragStart} title="Arrastrar para reordenar" style={{ cursor: "grab", color: "#cbd5e1", fontSize: 14, marginRight: 4, userSelect: "none" }}>⋮⋮</span>}
         <span style={{ color: "#94a3b8", fontFamily: "'DM Mono', monospace", fontSize: 11 }}>{i + 1}</span>
       </td>
       <td style={{ padding: "7px 6px", minWidth: 130 }}><LiveInput value={t.area} onChange={e => onUpdate("area", e.target.value)} style={s.tInp} /></td>
@@ -700,8 +702,12 @@ const TaskRow = ({ t, i, onUpdate, onDelete, onMove, dragOverIdx, setDragOverIdx
           : <span style={{ fontSize: 11, fontFamily: "'DM Mono', monospace", color: eff >= 80 ? "#0369a1" : "#64748b" }}>{eff !== null ? `${eff}%` : "N/A"}</span>}
       </td>
       <td style={{ padding: "7px 6px" }}>
-        <div onClick={() => setNotesOpen(true)} style={{ cursor: "pointer", fontSize: 12, color: t.notas ? "#0f172a" : "#94a3b8", maxWidth: 130, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.notas || "—"}</div>
-        {notesOpen && <NotesModal title={t.tarea} value={t.notas || ""} onSave={(v) => { onUpdate("notas", v); setNotesOpen(false); }} onClose={() => setNotesOpen(false)} />}
+        <div onClick={() => setNotesOpen(true)} style={{ cursor: "pointer", fontSize: 12, color: t.notas ? "#0f172a" : "#94a3b8", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", padding: "4px 6px", borderRadius: 4, border: "1px solid transparent" }} onMouseEnter={(e) => e.currentTarget.style.border = "1px solid #e2e8f0"} onMouseLeave={(e) => e.currentTarget.style.border = "1px solid transparent"}>{t.notas || "—"}</div>
+        {notesOpen && <NotesModal heading="Pendientes" icon="📌" placeholder="Anotá los pendientes de esta tarea…" title={t.tarea} value={t.notas || ""} onSave={(v) => { onUpdate("notas", v); setNotesOpen(false); }} onClose={() => setNotesOpen(false)} />}
+      </td>
+      <td style={{ padding: "7px 6px" }}>
+        <div onClick={() => setDecisionesOpen(true)} style={{ cursor: "pointer", fontSize: 12, color: t.decisiones ? "#0f172a" : "#94a3b8", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", padding: "4px 6px", borderRadius: 4, border: "1px solid transparent" }} onMouseEnter={(e) => e.currentTarget.style.border = "1px solid #e2e8f0"} onMouseLeave={(e) => e.currentTarget.style.border = "1px solid transparent"}>{t.decisiones || "—"}</div>
+        {decisionesOpen && <NotesModal heading="Decisiones" icon="✅" placeholder="Registrá las decisiones tomadas sobre esta tarea…" title={t.tarea} value={t.decisiones || ""} onSave={(v) => { onUpdate("decisiones", v); setDecisionesOpen(false); }} onClose={() => setDecisionesOpen(false)} />}
       </td>
       <td style={{ padding: "7px 6px" }}>
         <FileAttachments archivos={t.archivos||[]} onChange={v => onUpdate("archivos", v)} title={t.tarea} />
@@ -755,11 +761,45 @@ const FrenteView = ({ frenteId, data, setData, isMobile }) => {
   const tasks = data[frenteId] || [];
   const stats = getFrente(frenteId, data);
   const [dragOverIdx, setDragOverIdx] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({ search: "", areas: [], responsables: [], prioridades: [], estados: [], soloVencidas: false });
+  const [sortBy, setSortBy] = useState("");
   const upd = (tid, f, v) => setData(prev => { const nd = { ...prev }; nd[frenteId] = nd[frenteId].map(t => { if (t.id !== tid) return t; const u = { ...t, [f]: v }; if (f === "estado") u.avance = computeAvance(v, t.avance) ?? t.avance; return u; }); return nd; });
-  const add = () => { const mx = tasks.length ? Math.max(...tasks.map(t => t.id)) : 0; setData(prev => ({ ...prev, [frenteId]: [...prev[frenteId], { id: mx+1, area: "", tarea: "Nueva tarea", responsable: "", prioridad: "Media", estado: "Pendiente", fechaLimite: "", avance: 0, notas: "", archivos: [] }] })); };
+  const add = () => { const mx = tasks.length ? Math.max(...tasks.map(t => t.id)) : 0; setData(prev => ({ ...prev, [frenteId]: [...prev[frenteId], { id: mx+1, area: "", tarea: "Nueva tarea", responsable: "", prioridad: "Media", estado: "Pendiente", fechaLimite: "", avance: 0, notas: "", decisiones: "", archivos: [] }] })); };
   const del = (id) => setData(prev => ({ ...prev, [frenteId]: prev[frenteId].filter(t => t.id !== id) }));
   const move = (from, to) => { if (from === to || from < 0 || to < 0 || from >= tasks.length || to >= tasks.length) return; setData(prev => { const arr = [...(prev[frenteId] || [])]; const [m] = arr.splice(from, 1); arr.splice(to, 0, m); return { ...prev, [frenteId]: arr }; }); };
   const kpis = [{ l:"Total", v:stats.total, c:"#0369a1" }, { l:"Listas", v:stats.completados, c:"#0d9488" }, { l:"Proceso", v:stats.enProceso, c:"#f59e0b" }, { l:"Avance", v:`${Math.round(stats.avance)}%`, c:"#0369a1" }];
+
+  const uniqueAreas = useMemo(() => [...new Set(tasks.map(t => t.area).filter(Boolean))].sort(), [tasks]);
+  const uniqueResp = useMemo(() => [...new Set(tasks.map(t => t.responsable).filter(Boolean))].sort(), [tasks]);
+  const toggleIn = (key, val) => setFilters(prev => ({ ...prev, [key]: prev[key].includes(val) ? prev[key].filter(x => x !== val) : [...prev[key], val] }));
+  const filtersActive = !!(filters.search || filters.areas.length || filters.responsables.length || filters.prioridades.length || filters.estados.length || filters.soloVencidas || sortBy);
+  const clearFilters = () => { setFilters({ search: "", areas: [], responsables: [], prioridades: [], estados: [], soloVencidas: false }); setSortBy(""); };
+
+  const visible = useMemo(() => {
+    let arr = tasks.map((t, originalIdx) => ({ t, originalIdx }));
+    const f = filters;
+    if (f.search) { const q = f.search.toLowerCase(); arr = arr.filter(({ t }) => [t.tarea, t.area, t.responsable, t.notas, t.decisiones, t.estado, t.prioridad].some(x => (x || "").toLowerCase().includes(q))); }
+    if (f.areas.length) arr = arr.filter(({ t }) => f.areas.includes(t.area));
+    if (f.responsables.length) arr = arr.filter(({ t }) => f.responsables.includes(t.responsable));
+    if (f.prioridades.length) arr = arr.filter(({ t }) => f.prioridades.includes(t.prioridad));
+    if (f.estados.length) arr = arr.filter(({ t }) => f.estados.includes(t.estado));
+    if (f.soloVencidas) arr = arr.filter(({ t }) => t.fechaLimite && t.estado !== "Completado" && new Date(t.fechaLimite) < new Date());
+    const av = (t) => computeAvance(t.estado, t.avance) ?? -1;
+    if (sortBy === "avance-desc") arr.sort((a, b) => av(b.t) - av(a.t));
+    else if (sortBy === "avance-asc") arr.sort((a, b) => av(a.t) - av(b.t));
+    else if (sortBy === "fecha-asc") arr.sort((a, b) => (a.t.fechaLimite || "9999").localeCompare(b.t.fechaLimite || "9999"));
+    else if (sortBy === "fecha-desc") arr.sort((a, b) => (b.t.fechaLimite || "").localeCompare(a.t.fechaLimite || ""));
+    else if (sortBy === "estado") { const o = { "Bloqueado": 0, "En Proceso": 1, "Pendiente": 2, "Completado": 3, "N/A": 4 }; arr.sort((a, b) => (o[a.t.estado] ?? 9) - (o[b.t.estado] ?? 9)); }
+    else if (sortBy === "prioridad") { const o = { "Alta": 0, "Media": 1, "Baja": 2 }; arr.sort((a, b) => (o[a.t.prioridad] ?? 9) - (o[b.t.prioridad] ?? 9)); }
+    else if (sortBy === "area") arr.sort((a, b) => (a.t.area || "").localeCompare(b.t.area || ""));
+    return arr;
+  }, [tasks, filters, sortBy]);
+
+  const chip = (active, label, onClick, color = "#0369a1") => (
+    <button onClick={onClick} style={{ background: active ? color : "#fff", color: active ? "#fff" : "#64748b", border: `1px solid ${active ? color : "#e2e8f0"}`, borderRadius: 999, padding: "4px 11px", fontSize: 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{label}</button>
+  );
+
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -772,17 +812,59 @@ const FrenteView = ({ frenteId, data, setData, isMobile }) => {
           <div style={{ fontSize: 16, fontWeight: 800, color: k.c, fontFamily: "'DM Mono', monospace" }}>{k.v}</div>
         </div>))}
       </div>
+
+      {/* Filter bar */}
+      <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e2e8f0", padding: "8px 10px", marginBottom: 10 }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <input value={filters.search} onChange={e => setFilters(p => ({ ...p, search: e.target.value }))} placeholder="🔍 Buscar en tarea, área, responsable, pendientes, decisiones…" style={{ flex: 1, minWidth: 200, padding: "8px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 12, outline: "none" }} />
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 12, background: "#fff", cursor: "pointer" }}>
+            <option value="">Orden manual</option>
+            <option value="estado">Estado</option>
+            <option value="prioridad">Prioridad</option>
+            <option value="avance-desc">Avance ↓</option>
+            <option value="avance-asc">Avance ↑</option>
+            <option value="fecha-asc">F. Límite ↑</option>
+            <option value="fecha-desc">F. Límite ↓</option>
+            <option value="area">Área A-Z</option>
+          </select>
+          <button onClick={() => setShowFilters(s => !s)} style={{ background: showFilters || filtersActive ? "#0369a1" : "#f1f5f9", color: showFilters || filtersActive ? "#fff" : "#64748b", border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⚙ Filtros{filtersActive ? " ●" : ""}</button>
+          {filtersActive && <button onClick={clearFilters} style={{ background: "#fff", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Limpiar</button>}
+        </div>
+        {showFilters && (
+          <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px dashed #e2e8f0", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 5 }}>Estado</div>
+              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>{ESTADOS.map(e => chip(filters.estados.includes(e), e, () => toggleIn("estados", e)))}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 5 }}>Prioridad</div>
+              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>{PRIORIDADES.map(p2 => chip(filters.prioridades.includes(p2), p2, () => toggleIn("prioridades", p2), "#7c3aed"))}</div>
+            </div>
+            {uniqueAreas.length > 0 && <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 5 }}>Área</div>
+              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>{uniqueAreas.map(a => chip(filters.areas.includes(a), a, () => toggleIn("areas", a), "#0d9488"))}</div>
+            </div>}
+            {uniqueResp.length > 0 && <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 5 }}>Responsable</div>
+              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>{uniqueResp.map(r => chip(filters.responsables.includes(r), r, () => toggleIn("responsables", r), "#ea580c"))}</div>
+            </div>}
+            <div>{chip(filters.soloVencidas, "⏰ Solo vencidas", () => setFilters(p => ({ ...p, soloVencidas: !p.soloVencidas })), "#dc2626")}</div>
+          </div>
+        )}
+        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>Mostrando {visible.length} de {tasks.length} tareas{filtersActive ? " · (reordenar deshabilitado con filtros activos)" : ""}</div>
+      </div>
+
       {isMobile ? (
-        <div>{tasks.map((t, i) => <TaskCard key={t.id} t={t} i={i} total={tasks.length} onUpdate={(f, v) => upd(t.id, f, v)} onDelete={() => del(t.id)} onMove={move} />)}</div>
+        <div>{visible.map(({ t, originalIdx }, i) => <TaskCard key={t.id} t={t} i={filtersActive ? i : originalIdx} total={tasks.length} onUpdate={(f, v) => upd(t.id, f, v)} onDelete={() => del(t.id)} onMove={filtersActive ? undefined : move} />)}</div>
       ) : (
         <div style={{ overflowX: "auto", borderRadius: 10, border: "1px solid #e2e8f0" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead><tr style={{ background: "#f1f5f9" }}>
-              {["#","Área","Tarea","Responsable","Prior.","Estado","F.Límite","Avance","Notas","📎",""].map(h => (
+              {["#","Área","Tarea","Responsable","Prior.","Estado","F.Límite","Avance","Pendientes","Decisiones","📎",""].map(h => (
                 <th key={h} style={{ padding: "9px 6px", textAlign: "left", color: "#64748b", fontWeight: 600, fontSize: 10, textTransform: "uppercase", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap" }}>{h}</th>
               ))}
             </tr></thead>
-            <tbody>{tasks.map((t, i) => <TaskRow key={t.id} t={t} i={i} total={tasks.length} onUpdate={(f, v) => upd(t.id, f, v)} onDelete={() => del(t.id)} onMove={move} dragOverIdx={dragOverIdx} setDragOverIdx={setDragOverIdx} />)}</tbody>
+            <tbody>{visible.map(({ t, originalIdx }, i) => <TaskRow key={t.id} t={t} i={filtersActive ? i : originalIdx} total={tasks.length} onUpdate={(f, v) => upd(t.id, f, v)} onDelete={() => del(t.id)} onMove={move} dragOverIdx={dragOverIdx} setDragOverIdx={setDragOverIdx} canReorder={!filtersActive} />)}</tbody>
           </table>
         </div>
       )}
