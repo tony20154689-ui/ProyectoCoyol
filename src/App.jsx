@@ -8,6 +8,25 @@ import Tracker, { initialData } from "./Tracker.jsx";
 const DOC_REF = doc(db, "appData", "main");
 const DEBOUNCE_MS = 250;
 
+// One-time DEI Maestros bootstrap (auto-applies once, then flagged)
+const DEI_BOOTSTRAP_ITEMS = [
+  { concepto: "Adelanto Estudio Vial", fecha: "2024-04-01", destino: "Consultores Viales S.A.", factura: "Factura 1686", usd: "1130", crc: "" },
+  { concepto: "Adelanto 75% Renders Proyecto", fecha: "2024-07-31", destino: "GCG Estudio AD S.A.", factura: "Factura 178", usd: "1483.13", crc: "" },
+  { concepto: "Cancelación Renders Proyecto", fecha: "2024-08-14", destino: "GCG Estudio AD S.A.", factura: "Factura 179", usd: "494.38", crc: "" },
+  { concepto: "Adelanto Reunión Fincas", fecha: "2024-09-02", destino: "Jesús Barquero Bolaños", factura: "Factura 278", usd: "1186.50", crc: "" },
+  { concepto: "Topografía Terreno", fecha: "2024-10-10", destino: "Jesús Barquero Bolaños", factura: "Factura 292", usd: "4520", crc: "" },
+  { concepto: "Adelanto 60% Prueba Bombeo, estudio y Viabilidad pozo", fecha: "2025-01-27", destino: "Hidros del Norte S.A.", factura: "Factura 564", usd: "2644.20", crc: "1322100" },
+  { concepto: "Adelanto Viabilidad y Desfogue", fecha: "2025-03-12", destino: "Ismael Humberto Calderón Delgado", factura: "Factura 388", usd: "3000", crc: "" },
+  { concepto: "Avance Estudio Vial", fecha: "2025-03-14", destino: "Consultores Viales S.A.", factura: "Factura 1902", usd: "904", crc: "" },
+  { concepto: "Avance 2 Viabilidad y Desfogue", fecha: "2025-04-24", destino: "Ismael Humberto Calderón Delgado", factura: "Factura 296", usd: "5000", crc: "" },
+  { concepto: "Adelanto Planos ARQ", fecha: "2025-05-05", destino: "GCG Estudio AD S.A.", factura: "Recibo 107", usd: "4000", crc: "" },
+  { concepto: "Avance Estudio Vial", fecha: "2025-06-11", destino: "Consultores Viales S.A.", factura: "Factura 1971", usd: "3333.50", crc: "" },
+  { concepto: "Saldo 40% Prueba Bombeo, estudio y Viabilidad pozo", fecha: "2025-06-13", destino: "Hidros del Norte S.A.", factura: "Factura 631", usd: "1762.80", crc: "881400" },
+  { concepto: "Adelanto Planos MT y Infra", fecha: "2025-06-16", destino: "Extrapopescu", factura: "Recibo", usd: "14782", crc: "" },
+  { concepto: "Avance 3 Viabilidad y Desfogue", fecha: "2025-06-18", destino: "Ismael Humberto Calderón Delgado", factura: "Factura 405", usd: "3000", crc: "" },
+];
+const DEI_BOOTSTRAP_FLAG = "deiBootstrap_v1";
+
 const Splash = ({ msg }) => (
   <div style={{ fontFamily: "'DM Sans', sans-serif", minHeight: "100vh", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", fontSize: 13 }}>
     {msg}
@@ -118,6 +137,24 @@ export default function App() {
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   });
+
+  // One-time DEI bootstrap: runs once when data loads and flag not set
+  const bootstrapRanRef = useRef(false);
+  useEffect(() => {
+    if (!data || !user || bootstrapRanRef.current) return;
+    if (data._migrations?.[DEI_BOOTSTRAP_FLAG]) return;
+    bootstrapRanRef.current = true;
+    setData(prev => {
+      const existing = prev.maestros?.dei || [];
+      const maxId = existing.length ? Math.max(...existing.map(i => i.id || 0)) : 0;
+      const newItems = DEI_BOOTSTRAP_ITEMS.map((it, i) => ({ ...it, id: maxId + 1 + i, comprobante: [] }));
+      return {
+        ...prev,
+        maestros: { ...(prev.maestros || {}), dei: [...existing, ...newItems] },
+        _migrations: { ...(prev._migrations || {}), [DEI_BOOTSTRAP_FLAG]: new Date().toISOString() },
+      };
+    });
+  }, [data, user]);
 
   if (user === undefined) return <Splash msg="Cargando…" />;
   if (!user) return <Login />;
