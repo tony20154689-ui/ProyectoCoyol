@@ -1214,7 +1214,7 @@ const SiteMap = ({ clientes, selected, onSelect, isMobile }) => {
         <rect x="150" y="60" width="280" height="170" rx="6" fill={getFill("bodegaC")} stroke={selected === "bodegaC" ? "#0369a1" : getColor("bodegaC")} strokeWidth={selected === "bodegaC" ? 3 : 1.5} />
         {/* Dock lines */}
         {Array.from({length:16}).map((_,i) => <line key={`d${i}`} x1="150" y1={70 + i*10} x2="145" y2={70 + i*10} stroke="#cbd5e1" strokeWidth="1" />)}
-        <text x="290" y="130" textAnchor="middle" fontSize="18" fontWeight="800" fill={getColor("bodegaC")}>BODEGA C</text>
+        <text x="290" y="130" textAnchor="middle" fontSize="18" fontWeight="800" fill={getColor("bodegaC")}>BODEGA D3</text>
         <text x="290" y="150" textAnchor="middle" fontSize="10" fill="#64748b">7,123 m²</text>
         {clientes.bodegaC?.cliente && <text x="290" y="168" textAnchor="middle" fontSize="11" fontWeight="700" fill="#0f172a">{clientes.bodegaC.cliente}</text>}
         {/* Mezzanine */}
@@ -1225,7 +1225,7 @@ const SiteMap = ({ clientes, selected, onSelect, isMobile }) => {
       {/* ── BODEGA B (center) ── */}
       <g onClick={() => onSelect("bodegaB")} style={{ cursor: "pointer" }}>
         <rect x="130" y="400" width="310" height="260" rx="6" fill={getFill("bodegaB")} stroke={selected === "bodegaB" ? "#0369a1" : getColor("bodegaB")} strokeWidth={selected === "bodegaB" ? 3 : 1.5} />
-        <text x="285" y="520" textAnchor="middle" fontSize="22" fontWeight="800" fill={getColor("bodegaB")}>BODEGA B</text>
+        <text x="285" y="520" textAnchor="middle" fontSize="22" fontWeight="800" fill={getColor("bodegaB")}>BODEGA D2</text>
         <text x="285" y="545" textAnchor="middle" fontSize="12" fill="#64748b">15,163 m²</text>
         {clientes.bodegaB?.cliente && <text x="285" y="565" textAnchor="middle" fontSize="13" fontWeight="700" fill="#0f172a">{clientes.bodegaB.cliente}</text>}
         {/* Dimensions */}
@@ -1236,7 +1236,7 @@ const SiteMap = ({ clientes, selected, onSelect, isMobile }) => {
       {/* ── BODEGA A (bottom) ── */}
       <g onClick={() => onSelect("bodegaA")} style={{ cursor: "pointer" }}>
         <rect x="250" y="730" width="160" height="100" rx="6" fill={getFill("bodegaA")} stroke={selected === "bodegaA" ? "#0369a1" : getColor("bodegaA")} strokeWidth={selected === "bodegaA" ? 3 : 1.5} />
-        <text x="330" y="775" textAnchor="middle" fontSize="16" fontWeight="800" fill={getColor("bodegaA")}>BODEGA A</text>
+        <text x="330" y="775" textAnchor="middle" fontSize="16" fontWeight="800" fill={getColor("bodegaA")}>BODEGA D1</text>
         <text x="330" y="795" textAnchor="middle" fontSize="10" fill="#64748b">4,063 m²</text>
         {clientes.bodegaA?.cliente && <text x="330" y="812" textAnchor="middle" fontSize="11" fontWeight="700" fill="#0f172a">{clientes.bodegaA.cliente}</text>}
         <text x="330" y="743" textAnchor="middle" fontSize="8" fill="#94a3b8">79 m</text>
@@ -1268,7 +1268,7 @@ const SiteMap = ({ clientes, selected, onSelect, isMobile }) => {
 };
 
 const BodegaDetail = ({ id, data, setData, isMobile }) => {
-  const labels = { bodegaA: "Bodega A", bodegaB: "Bodega B", bodegaC: "Bodega C" };
+  const labels = { bodegaA: "Bodega D1", bodegaB: "Bodega D2", bodegaC: "Bodega D3" };
   const c = data.clientes?.[id];
   if (!c) return null;
   const upd = (f, v) => setData(prev => ({ ...prev, clientes: { ...prev.clientes, [id]: { ...prev.clientes[id], [f]: v } } }));
