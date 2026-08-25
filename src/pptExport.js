@@ -55,11 +55,14 @@ const loadImageDataUrl = async (url) => {
   } catch { return null; }
 };
 
-export async function generateMinutaPpt({ entry, data, FRENTES }) {
+export async function generateMinutaPpt({ entry, data, FRENTES, project }) {
+  const brandName = project?.name || "BODEGAS COYOL";
+  const projectShort = project?.short || "Coyol";
+  const authorName = project?.name ? project.name.replace(/^BODEGAS\s+/i, "Bodegas ") : "Bodegas Coyol";
   const pptx = new PptxGenJS();
   pptx.defineLayout({ name: "WIDE", width: 13.33, height: 7.5 });
   pptx.layout = "WIDE";
-  pptx.author = "Bodegas Coyol";
+  pptx.author = authorName;
   pptx.company = "Grupo ZEN · Deindustrial";
 
   const W = 13.33, H = 7.5;
@@ -90,7 +93,7 @@ export async function generateMinutaPpt({ entry, data, FRENTES }) {
     if (logoZen) s1.addImage({ data: logoZen, x: 0.72, y: 0.58, w: 0.8, h: 0.8, sizing: { type: "contain", w: 0.8, h: 0.8 } });
     if (logoDei) s1.addImage({ data: logoDei, x: 1.75, y: 0.66, w: 2.85, h: 0.62, sizing: { type: "contain", w: 2.85, h: 0.62 } });
   }
-  s1.addText("BODEGAS COYOL", { x: 0.8, y: 4.95, w: 9.5, h: 0.95, fontSize: 50, bold: true, color: C.white, fontFace: "Calibri", shadow: { type: "outer", color: "000000", blur: 4, offset: 2, angle: 90, opacity: 0.6 } });
+  s1.addText(brandName, { x: 0.8, y: 4.95, w: 9.5, h: 0.95, fontSize: 50, bold: true, color: C.white, fontFace: "Calibri", shadow: { type: "outer", color: "000000", blur: 4, offset: 2, angle: 90, opacity: 0.6 } });
   s1.addText("Reporte Ejecutivo · Avance del Proyecto", { x: 0.82, y: 5.85, w: 9.5, h: 0.5, fontSize: 20, color: C.white, fontFace: "Calibri" });
   s1.addText(fmtFecha(entry.fecha).toUpperCase(), { x: 0.82, y: 6.4, w: 9.5, h: 0.5, fontSize: 17, bold: true, color: C.orange, fontFace: "Calibri" });
   // Big progress badge
@@ -190,6 +193,6 @@ export async function generateMinutaPpt({ entry, data, FRENTES }) {
     s5.addText(`Responsable de seguimiento: ${entry.responsable}${entry.fechaLimite ? "  ·  Fecha límite: " + fmtFecha(entry.fechaLimite) : ""}`, { x: 0.6, y: 6.8, w: 12.1, h: 0.5, fontSize: 13, color: "94A3B8", fontFace: "Calibri" });
   }
 
-  const fileName = `Presentacion-Coyol-${entry.fecha || new Date().toISOString().split("T")[0]}.pptx`;
+  const fileName = `Presentacion-${projectShort}-${entry.fecha || new Date().toISOString().split("T")[0]}.pptx`;
   await pptx.writeFile({ fileName });
 }

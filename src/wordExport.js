@@ -97,7 +97,10 @@ const getFrente = (id, data) => {
 
 const splitParagraphs = (text) => (text || "—").split(/\n+/).map(line => line.trim()).filter(Boolean);
 
-export async function generateMinutaWord({ entry, data, FRENTES }) {
+export async function generateMinutaWord({ entry, data, FRENTES, project }) {
+  const projectTitle = project?.name ? `Proyecto ${project.name.replace(/^BODEGAS\s+/i, "Bodegas ")}` : "Proyecto Bodegas Coyol";
+  const projectSubtitle = project?.subtitle || "Ganadera San Lorenzo, S.A.";
+  const projectShort = project?.short || "Coyol";
   const fecha = fmtFecha(entry.fecha);
   const [coverImg, logoZen, logoDei] = await Promise.all([
     loadImageBuffer("/portada.jpg"),
@@ -126,9 +129,9 @@ export async function generateMinutaWord({ entry, data, FRENTES }) {
     })] : []),
     p(txt("ACTA DE REUNIÓN", { bold: true, size: 36, color: C.primary, font: "Calibri" }),
       { alignment: AlignmentType.CENTER, spacing: { after: 80 } }),
-    p(txt("Proyecto Bodegas Coyol", { size: 28, color: C.accent, font: "Calibri" }),
+    p(txt(projectTitle, { size: 28, color: C.accent, font: "Calibri" }),
       { alignment: AlignmentType.CENTER, spacing: { after: 40 } }),
-    p(txt("Ganadera San Lorenzo, S.A.", { italics: true, size: 20, color: C.gray, font: "Calibri" }),
+    p(txt(projectSubtitle, { italics: true, size: 20, color: C.gray, font: "Calibri" }),
       { alignment: AlignmentType.CENTER, spacing: { after: 200 } }),
     p(txt(fecha.toUpperCase(), { bold: true, size: 22, color: C.orange, font: "Calibri" }),
       { alignment: AlignmentType.CENTER, spacing: { after: 320 } }),
@@ -339,9 +342,9 @@ export async function generateMinutaWord({ entry, data, FRENTES }) {
 
   // ===== Document =====
   const doc = new Document({
-    creator: "Bodegas Coyol Tracker",
+    creator: `${projectTitle} Tracker`,
     title: `Acta de Reunión — ${fecha}`,
-    description: "Acta ejecutiva del proyecto Bodegas Coyol",
+    description: `Acta ejecutiva del ${projectTitle.toLowerCase()}`,
     styles: {
       default: {
         document: { run: { font: "Calibri", size: 20 } },
@@ -381,6 +384,6 @@ export async function generateMinutaWord({ entry, data, FRENTES }) {
   });
 
   const blob = await Packer.toBlob(doc);
-  const safeName = `Acta-Coyol-${entry.fecha || new Date().toISOString().split("T")[0]}.docx`;
+  const safeName = `Acta-${projectShort}-${entry.fecha || new Date().toISOString().split("T")[0]}.docx`;
   saveAs(blob, safeName);
 }

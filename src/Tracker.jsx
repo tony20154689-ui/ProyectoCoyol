@@ -889,7 +889,7 @@ const FrenteView = ({ frenteId, data, setData, isMobile }) => {
   );
 };
 
-const BitacoraView = ({ data, setData, isMobile }) => {
+const BitacoraView = ({ data, setData, isMobile, project }) => {
   const entries = data.bitacora || [];
   const [sortDir, setSortDir] = useState("desc");
   const [generating, setGenerating] = useState(null);
@@ -911,7 +911,7 @@ const BitacoraView = ({ data, setData, isMobile }) => {
     setGenerating(entry.id);
     try {
       const { generateMinutaWord } = await import("./wordExport.js");
-      await generateMinutaWord({ entry, data, FRENTES });
+      await generateMinutaWord({ entry, data, FRENTES, project });
     }
     catch (err) { alert("Error al generar el Word: " + (err?.message || err)); }
     finally { setGenerating(null); }
@@ -920,7 +920,7 @@ const BitacoraView = ({ data, setData, isMobile }) => {
     setGeneratingPpt(entry.id);
     try {
       const { generateMinutaPpt } = await import("./pptExport.js");
-      await generateMinutaPpt({ entry, data, FRENTES });
+      await generateMinutaPpt({ entry, data, FRENTES, project });
     }
     catch (err) { alert("Error al generar el PowerPoint: " + (err?.message || err)); }
     finally { setGeneratingPpt(null); }
@@ -980,7 +980,7 @@ const BitacoraView = ({ data, setData, isMobile }) => {
   );
 };
 
-const SeguimientoView = ({ data, setData, isMobile, sub: subProp, setSub: setSubProp }) => {
+const SeguimientoView = ({ data, setData, isMobile, sub: subProp, setSub: setSubProp, project }) => {
   const [subInternal, setSubInternal] = useState(FRENTES[0].id);
   const sub = subProp ?? subInternal;
   const setSub = setSubProp ?? setSubInternal;
@@ -995,7 +995,7 @@ const SeguimientoView = ({ data, setData, isMobile, sub: subProp, setSub: setSub
           </button>
         ); })}
       </div>
-      {sub === "bitacora" ? <BitacoraView data={data} setData={setData} isMobile={isMobile} /> : <FrenteView frenteId={sub} data={data} setData={setData} isMobile={isMobile} />}
+      {sub === "bitacora" ? <BitacoraView data={data} setData={setData} isMobile={isMobile} project={project} /> : <FrenteView frenteId={sub} data={data} setData={setData} isMobile={isMobile} />}
     </div>
   );
 };
@@ -1306,8 +1306,19 @@ const BodegaDetail = ({ id, data, setData, isMobile }) => {
   );
 };
 
-const ClientesView = ({ data, setData, isMobile }) => {
+const ClientesView = ({ data, setData, isMobile, project }) => {
   const [selected, setSelected] = useState("bodegaC");
+  if (project?.id === "saro") {
+    return (
+      <div style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 24 : 40, border: "1px dashed #cbd5e1", textAlign: "center" }}>
+        <div style={{ fontSize: 40, marginBottom: 10 }}>🏗️</div>
+        <h2 style={{ margin: "0 0 6px", fontSize: isMobile ? 15 : 18, fontWeight: 800, color: "#0c4a6e" }}>Bodegas pendientes de definir</h2>
+        <p style={{ margin: 0, fontSize: 12, color: "#64748b", lineHeight: 1.5, maxWidth: 420, marginLeft: "auto", marginRight: "auto" }}>
+          El mapa de bodegas para el proyecto {project?.short || "SARO"} se configurará una vez recibida la información del cliente.
+        </p>
+      </div>
+    );
+  }
   return (
     <div>
       <h2 style={{ margin: "0 0 4px", fontSize: isMobile ? 15 : 18, fontWeight: 800, color: "#0c4a6e" }}>Mapa del Proyecto — Asignación de Clientes</h2>
@@ -1440,9 +1451,9 @@ export default function Tracker({ data, setData, user, onLogout, project, onSwit
         </header>
         <div style={{ padding: isMobile ? "12px 10px" : "24px 28px", maxWidth: 1400 }}>
           {section === "resumen" && <ResumenView data={data} isMobile={isMobile} onSelectFrente={goToFrente} />}
-          {section === "seguimiento" && <SeguimientoView data={data} setData={setData} isMobile={isMobile} sub={seguimientoSub} setSub={setSeguimientoSub} />}
+          {section === "seguimiento" && <SeguimientoView data={data} setData={setData} isMobile={isMobile} sub={seguimientoSub} setSub={setSeguimientoSub} project={project} />}
           {section === "maestros" && <MaestrosView data={data} setData={setData} isMobile={isMobile} />}
-          {section === "clientes" && <ClientesView data={data} setData={setData} isMobile={isMobile} />}
+          {section === "clientes" && <ClientesView data={data} setData={setData} isMobile={isMobile} project={project} />}
         </div>
       </main>
 
