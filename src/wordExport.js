@@ -38,7 +38,9 @@ const borderAll = (color = C.border, size = 4) => ({
   right: { style: BorderStyle.SINGLE, size, color },
 });
 
-const txt = (text, opts = {}) => new TextRun({ text: text ?? "", ...opts });
+// Strip characters not allowed in XML 1.0 (control chars except tab/lf/cr) — causes Word "unreadable content".
+const xmlSafe = (s) => String(s ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\uFFFE\uFFFF]/g, "");
+const txt = (text, opts = {}) => new TextRun({ text: xmlSafe(text), ...opts });
 const p = (children, opts = {}) => new Paragraph({ children: Array.isArray(children) ? children : [children], ...opts });
 const heading = (text, color = C.primary, size = 28) =>
   p(txt(text, { bold: true, size, color, font: "Calibri" }), { spacing: { before: 240, after: 120 } });
