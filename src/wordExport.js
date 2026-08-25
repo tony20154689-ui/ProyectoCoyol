@@ -96,6 +96,8 @@ const getFrente = (id, data) => {
 };
 
 const splitParagraphs = (text) => (text || "—").split(/\n+/).map(line => line.trim()).filter(Boolean);
+// Split into blocks by blank line; within a block preserve line breaks.
+const splitBlocks = (text) => (text || "").split(/\n\s*\n+/).map(b => b.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(Boolean)).filter(b => b.length);
 
 export async function generateMinutaWord({ entry, data, FRENTES, project }) {
   const projectTitle = project?.name ? `Proyecto ${project.name.replace(/^BODEGAS\s+/i, "Bodegas ")}` : "Proyecto Bodegas Coyol";
@@ -237,7 +239,9 @@ export async function generateMinutaWord({ entry, data, FRENTES, project }) {
       decisionesBlocks.push(p([txt(`${f.icon}  `, { size: 18, font: "Calibri" }), txt(f.name, { bold: true, size: 20, color: C.primary, font: "Calibri" })], { spacing: { before: 160, after: 60 } }));
       conDecision.forEach(t => {
         decisionesBlocks.push(p([txt("✓ ", { size: 18, color: C.green, bold: true, font: "Calibri" }), txt(t.tarea, { bold: true, size: 18, color: C.text, font: "Calibri" })], { spacing: { after: 20 }, indent: { left: 200 } }));
-        splitParagraphs(t.decisiones).forEach(line => decisionesBlocks.push(p(txt(line, { size: 18, color: C.text, font: "Calibri" }), { spacing: { after: 40 }, indent: { left: 460 } })));
+        splitBlocks(t.decisiones).forEach(block => {
+          block.forEach((line, i) => decisionesBlocks.push(p(txt((i === 0 ? "• " : "   ") + line, { size: 18, color: C.text, font: "Calibri" }), { spacing: { after: i === block.length - 1 ? 60 : 10 }, indent: { left: 460 } })));
+        });
       });
     }
     if (conPendiente.length) {
@@ -249,7 +253,9 @@ export async function generateMinutaWord({ entry, data, FRENTES, project }) {
           txt(`  —  ${t.estado}`, { size: 16, color: estadoColor(t.estado), bold: true, font: "Calibri" }),
           ...(t.responsable ? [txt(`  ·  ${t.responsable}`, { size: 15, color: C.gray, italics: true, font: "Calibri" })] : []),
         ], { spacing: { after: 20 }, indent: { left: 200 } }));
-        splitParagraphs(t.notas).forEach(line => pendientesBlocks.push(p(txt(line, { size: 18, color: C.text, font: "Calibri" }), { spacing: { after: 40 }, indent: { left: 460 } })));
+        splitBlocks(t.notas).forEach(block => {
+          block.forEach((line, i) => pendientesBlocks.push(p(txt((i === 0 ? "• " : "   ") + line, { size: 18, color: C.text, font: "Calibri" }), { spacing: { after: i === block.length - 1 ? 60 : 10 }, indent: { left: 460 } })));
+        });
       });
     }
   });
@@ -320,8 +326,22 @@ export async function generateMinutaWord({ entry, data, FRENTES, project }) {
       detailBlocks.push(p(txt("Pendientes y decisiones", { bold: true, size: 17, color: C.primary, font: "Calibri" }), { spacing: { before: 160, after: 60 } }));
       conContenido.forEach(t => {
         detailBlocks.push(p(txt(t.tarea, { bold: true, size: 16, color: C.text, font: "Calibri" }), { spacing: { before: 80, after: 20 }, indent: { left: 160 } }));
-        if ((t.notas || "").trim()) splitParagraphs(t.notas).forEach(line => detailBlocks.push(p([txt("○ Pendiente: ", { size: 15, color: C.orange, bold: true, font: "Calibri" }), txt(line, { size: 15, color: C.text, font: "Calibri" })], { spacing: { after: 20 }, indent: { left: 360 } })));
-        if ((t.decisiones || "").trim()) splitParagraphs(t.decisiones).forEach(line => detailBlocks.push(p([txt("✓ Decisión: ", { size: 15, color: C.green, bold: true, font: "Calibri" }), txt(line, { size: 15, color: C.text, font: "Calibri" })], { spacing: { after: 20 }, indent: { left: 360 } })));
+        if ((t.notas || "").trim()) splitBlocks(t.notas).forEach(block => {
+          block.forEach((line, i) => {
+            const children = i === 0
+              ? [txt("○ Pendiente: ", { size: 15, color: C.orange, bold: true, font: "Calibri" }), txt(line, { size: 15, color: C.text, font: "Calibri" })]
+              : [txt(line, { size: 15, color: C.text, font: "Calibri" })];
+            detailBlocks.push(p(children, { spacing: { after: i === block.length - 1 ? 40 : 10 }, indent: { left: i === 0 ? 360 : 640 } }));
+          });
+        });
+        if ((t.decisiones || "").trim()) splitBlocks(t.decisiones).forEach(block => {
+          block.forEach((line, i) => {
+            const children = i === 0
+              ? [txt("✓ Decisión: ", { size: 15, color: C.green, bold: true, font: "Calibri" }), txt(line, { size: 15, color: C.text, font: "Calibri" })]
+              : [txt(line, { size: 15, color: C.text, font: "Calibri" })];
+            detailBlocks.push(p(children, { spacing: { after: i === block.length - 1 ? 40 : 10 }, indent: { left: i === 0 ? 360 : 640 } }));
+          });
+        });
       });
     }
   });
