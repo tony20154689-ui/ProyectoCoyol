@@ -1191,26 +1191,26 @@ const SARO_BODEGA_META = {
   13: { n1: 346.0, n2: 120.0, total: 466.0, x: 841, y: 662, w: 190, h: 42 },
   14: { n1: 346.0, n2: 120.0, total: 466.0, x: 841, y: 705, w: 190, h: 42 },
   15: { n1: 396.23, n2: 136.74, total: 532.97, x: 841, y: 747, w: 190, h: 42 },
-  16: { n1: 376.5, n2: 130.16, total: 506.66, x: 952, y: 755, w: 42, h: 200 },
-  17: { n1: 346.0, n2: 120.0, total: 466.0, x: 906, y: 755, w: 42, h: 200 },
-  18: { n1: 346.0, n2: 120.0, total: 466.0, x: 865, y: 755, w: 42, h: 200 },
-  19: { n1: 346.0, n2: 120.0, total: 466.0, x: 821, y: 755, w: 42, h: 200 },
-  20: { n1: 346.0, n2: 120.0, total: 466.0, x: 780, y: 755, w: 42, h: 200 },
-  21: { n1: 346.0, n2: 120.0, total: 466.0, x: 736, y: 755, w: 42, h: 200 },
-  22: { n1: 345.97, n2: 120.0, total: 465.97, x: 695, y: 755, w: 42, h: 200 },
-  23: { n1: 346.0, n2: 120.0, total: 466.0, x: 651, y: 755, w: 42, h: 200 },
-  24: { n1: 346.0, n2: 120.0, total: 466.0, x: 610, y: 755, w: 42, h: 200 },
-  25: { n1: 346.0, n2: 120.0, total: 466.0, x: 566, y: 755, w: 42, h: 200 },
-  26: { n1: 346.0, n2: 120.0, total: 466.0, x: 525, y: 755, w: 42, h: 200 },
-  27: { n1: 346.0, n2: 120.0, total: 466.0, x: 481, y: 755, w: 42, h: 200 },
-  28: { n1: 706.0, n2: 240.0, total: 946.0, x: 418, y: 755, w: 42, h: 200 },
-  29: { n1: 586.0, n2: 240.0, total: 826.0, x: 801, y: 545, w: 42, h: 200 },
-  30: { n1: 346.0, n2: 120.0, total: 466.0, x: 758, y: 545, w: 42, h: 200 },
-  31: { n1: 346.0, n2: 120.0, total: 466.0, x: 716, y: 545, w: 42, h: 200 },
-  32: { n1: 346.0, n2: 120.0, total: 466.0, x: 673, y: 545, w: 42, h: 200 },
-  33: { n1: 346.0, n2: 120.0, total: 466.0, x: 631, y: 545, w: 42, h: 200 },
-  34: { n1: 346.0, n2: 120.0, total: 466.0, x: 588, y: 545, w: 42, h: 200 },
-  35: { n1: 346.0, n2: 120.0, total: 466.0, x: 524, y: 545, w: 42, h: 200 },
+  16: { n1: 376.5, n2: 130.16, total: 506.66, x: 952, y: 855, w: 42, h: 200 },
+  17: { n1: 346.0, n2: 120.0, total: 466.0, x: 906, y: 855, w: 42, h: 200 },
+  18: { n1: 346.0, n2: 120.0, total: 466.0, x: 865, y: 855, w: 42, h: 200 },
+  19: { n1: 346.0, n2: 120.0, total: 466.0, x: 821, y: 855, w: 42, h: 200 },
+  20: { n1: 346.0, n2: 120.0, total: 466.0, x: 780, y: 855, w: 42, h: 200 },
+  21: { n1: 346.0, n2: 120.0, total: 466.0, x: 736, y: 855, w: 42, h: 200 },
+  22: { n1: 345.97, n2: 120.0, total: 465.97, x: 695, y: 855, w: 42, h: 200 },
+  23: { n1: 346.0, n2: 120.0, total: 466.0, x: 651, y: 855, w: 42, h: 200 },
+  24: { n1: 346.0, n2: 120.0, total: 466.0, x: 610, y: 855, w: 42, h: 200 },
+  25: { n1: 346.0, n2: 120.0, total: 466.0, x: 566, y: 855, w: 42, h: 200 },
+  26: { n1: 346.0, n2: 120.0, total: 466.0, x: 525, y: 855, w: 42, h: 200 },
+  27: { n1: 346.0, n2: 120.0, total: 466.0, x: 481, y: 855, w: 42, h: 200 },
+  28: { n1: 706.0, n2: 240.0, total: 946.0, x: 418, y: 855, w: 42, h: 200 },
+  29: { n1: 586.0, n2: 240.0, total: 826.0, x: 801, y: 645, w: 42, h: 200 },
+  30: { n1: 346.0, n2: 120.0, total: 466.0, x: 758, y: 645, w: 42, h: 200 },
+  31: { n1: 346.0, n2: 120.0, total: 466.0, x: 716, y: 645, w: 42, h: 200 },
+  32: { n1: 346.0, n2: 120.0, total: 466.0, x: 673, y: 645, w: 42, h: 200 },
+  33: { n1: 346.0, n2: 120.0, total: 466.0, x: 631, y: 645, w: 42, h: 200 },
+  34: { n1: 346.0, n2: 120.0, total: 466.0, x: 588, y: 645, w: 42, h: 200 },
+  35: { n1: 346.0, n2: 120.0, total: 466.0, x: 524, y: 645, w: 42, h: 200 },
 };
 const SARO_BODEGAS = Object.keys(SARO_BODEGA_META).map(n => `bodega${n}`);
 
@@ -1363,6 +1363,62 @@ const SiteMap = ({ clientes, selected, onSelect, isMobile }) => {
   );
 };
 
+const parseMoney = (v) => {
+  if (v == null) return 0;
+  const n = Number(String(v).replace(/[^0-9.\-]/g, ""));
+  return isFinite(n) ? n : 0;
+};
+const fmtMoney = (n) => "$" + (Math.round(n * 100) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const ComisionBreakdown = ({ c, isMobile }) => {
+  const precio = parseMoney(c.precioVenta);
+  const usaBroker = !!c.corredorUsado;
+  const brokerX = parseMoney(c.corredorComision); // percent
+  const row = (label, pct, amount, color) => (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 10px", background: "#fff", borderRadius: 6, border: `1px solid ${color}30` }}>
+      <div style={{ fontSize: 12, color: "#334155" }}>{label} <span style={{ color: "#64748b" }}>({pct}%)</span></div>
+      <div style={{ fontSize: 13, fontWeight: 800, color }}>{fmtMoney(amount)}</div>
+    </div>
+  );
+  let rows, total;
+  if (!usaBroker) {
+    const base = precio * 0.03, form = precio * 0.01, reparto = precio * 0.015;
+    total = base + form + reparto;
+    rows = [
+      row("Base comisiones netas", "3", base, "#0369a1"),
+      row("Gastos fijos de formalización", "1", form, "#f59e0b"),
+      row("Se reparte entre ambos", "1.5", reparto, "#15803d"),
+    ];
+  } else {
+    const form = precio * 0.01, broker = precio * (brokerX / 100), base = precio * ((4.5 - brokerX) / 100);
+    total = form + broker + base;
+    rows = [
+      row("Formalización", "1", form, "#f59e0b"),
+      row(`Broker${c.corredorNombre ? ` (${c.corredorNombre})` : ""}`, brokerX.toString(), broker, "#7c3aed"),
+      row("Base", (4.5 - brokerX).toFixed(2), base, "#0369a1"),
+    ];
+  }
+  return (
+    <div style={{ marginBottom: 12, padding: 12, background: "#fefce8", borderRadius: 8, border: "1px solid #fde68a" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#92400e" }}>🧮 Cálculo de comisión — {usaBroker ? "Con broker" : "Sin broker"}</div>
+        <div style={{ fontSize: 11, color: "#78716c" }}>Precio: <strong>{precio ? fmtMoney(precio) : "—"}</strong></div>
+      </div>
+      {precio === 0 ? (
+        <div style={{ fontSize: 11, color: "#a16207", fontStyle: "italic", textAlign: "center", padding: 8 }}>Ingresá el precio de venta para ver el desglose.</div>
+      ) : (
+        <>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>{rows}</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", background: "#0c4a6e", borderRadius: 6 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>Total comisiones</div>
+            <div style={{ fontSize: 15, fontWeight: 900, color: "#fff" }}>{fmtMoney(total)}</div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 const BodegaDetail = ({ id, data, setData, isMobile, project }) => {
   const c = data.clientes?.[id];
   if (!c) return null;
@@ -1414,24 +1470,27 @@ const BodegaDetail = ({ id, data, setData, isMobile, project }) => {
       <div style={{ marginBottom: 12 }}><label style={s.lbl}>Notas</label><textarea value={c.notas} onChange={e => upd("notas", e.target.value)} rows={3} style={{ ...s.inp, resize: "vertical" }} /></div>
 
       {isSaro && (
-        <div style={{ marginBottom: 12, padding: 12, background: "#f0fdf4", borderRadius: 8, border: "1px solid #bbf7d0" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#15803d", marginBottom: 10 }}>💼 Datos de la venta</div>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10, marginBottom: 10 }}>
-            <div><label style={s.lbl}>Vendedor</label><input value={c.vendedor || ""} onChange={e => upd("vendedor", e.target.value)} style={s.inp} placeholder="Quien cerró la venta" /></div>
-            <div><label style={s.lbl}>¿Usó corredor?</label>
-              <select value={c.corredorUsado ? "si" : "no"} onChange={e => upd("corredorUsado", e.target.value === "si")} style={s.inp}>
-                <option value="no">No</option>
-                <option value="si">Sí</option>
-              </select>
+        <>
+          <div style={{ marginBottom: 12, padding: 12, background: "#f0fdf4", borderRadius: 8, border: "1px solid #bbf7d0" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#15803d", marginBottom: 10 }}>💼 Datos de la venta</div>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10, marginBottom: 10 }}>
+              <div><label style={s.lbl}>Vendedor</label><input value={c.vendedor || ""} onChange={e => upd("vendedor", e.target.value)} style={s.inp} placeholder="Quien cerró la venta" /></div>
+              <div><label style={s.lbl}>¿Usó corredor?</label>
+                <select value={c.corredorUsado ? "si" : "no"} onChange={e => upd("corredorUsado", e.target.value === "si")} style={s.inp}>
+                  <option value="no">No</option>
+                  <option value="si">Sí</option>
+                </select>
+              </div>
             </div>
+            {c.corredorUsado && (
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr", gap: 10 }}>
+                <div><label style={s.lbl}>Corredor / Inmobiliaria</label><input value={c.corredorNombre || ""} onChange={e => upd("corredorNombre", e.target.value)} style={s.inp} placeholder="Nombre del corredor" /></div>
+                <div><label style={s.lbl}>Comisión broker "X" (%)</label><input value={c.corredorComision || ""} onChange={e => upd("corredorComision", e.target.value)} style={s.inp} placeholder="Ej: 2" /></div>
+              </div>
+            )}
           </div>
-          {c.corredorUsado && (
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr", gap: 10 }}>
-              <div><label style={s.lbl}>Corredor / Inmobiliaria</label><input value={c.corredorNombre || ""} onChange={e => upd("corredorNombre", e.target.value)} style={s.inp} placeholder="Nombre del corredor" /></div>
-              <div><label style={s.lbl}>Comisión (%)</label><input value={c.corredorComision || ""} onChange={e => upd("corredorComision", e.target.value)} style={s.inp} placeholder="Ej: 3" /></div>
-            </div>
-          )}
-        </div>
+          <ComisionBreakdown c={c} isMobile={isMobile} />
+        </>
       )}
 
       <div><label style={s.lbl}>Documentos del cliente</label><FileAttachments archivos={c.archivos||[]} onChange={v => upd("archivos", v)} title={c.cliente || c.empresa || c.nombre || ""} /></div>
@@ -1448,10 +1507,23 @@ const ClientesView = ({ data, setData, isMobile, project }) => {
     const embedSrc = `https://maps.google.com/maps?q=${lat},${lng}&z=17&output=embed`;
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 16 : 20, border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <h2 style={{ margin: "0 0 4px", fontSize: isMobile ? 15 : 18, fontWeight: 800, color: "#0c4a6e" }}>Mapa del Proyecto — Asignación de Clientes</h2>
+          <p style={{ margin: "0 0 12px", fontSize: 11, color: "#94a3b8" }}>Toca una bodega para ver y editar los datos del cliente</p>
+          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 16 : 24, alignItems: "flex-start" }}>
+            <div style={{ background: "#f8fafc", borderRadius: 12, padding: isMobile ? 8 : 12, border: "1px solid #e2e8f0", flexShrink: 0 }}>
+              <SiteMapSaro clientes={data.clientes || {}} selected={selected} onSelect={setSelected} isMobile={isMobile} />
+            </div>
+            <div style={{ flex: 1, width: "100%", minWidth: 0 }}>
+              <BodegaDetail id={selected} data={data} setData={setData} isMobile={isMobile} project={project} />
+            </div>
+          </div>
+        </div>
+
         <div style={{ background: "linear-gradient(135deg, #fefce8 0%, #fef3c7 100%)", borderRadius: 12, padding: isMobile ? 14 : 18, border: "1px solid #fde68a" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <div style={{ fontSize: 18 }}>💰</div>
-            <h3 style={{ margin: 0, fontSize: isMobile ? 14 : 15, fontWeight: 800, color: "#92400e" }}>Condiciones de Venta</h3>
+            <h3 style={{ margin: 0, fontSize: isMobile ? 14 : 15, fontWeight: 800, color: "#92400e" }}>Condiciones de Venta (referencia)</h3>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
             <div style={{ background: "#fff", borderRadius: 8, padding: 12, border: "1px solid #fde68a" }}>
@@ -1469,19 +1541,6 @@ const ClientesView = ({ data, setData, isMobile, project }) => {
                 <li>Broker <strong>"X"</strong></li>
                 <li>Base <strong>4.5% − "X"</strong></li>
               </ul>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 16 : 20, border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <h2 style={{ margin: "0 0 4px", fontSize: isMobile ? 15 : 18, fontWeight: 800, color: "#0c4a6e" }}>Mapa del Proyecto — Asignación de Clientes</h2>
-          <p style={{ margin: "0 0 12px", fontSize: 11, color: "#94a3b8" }}>Toca una bodega para ver y editar los datos del cliente</p>
-          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 16 : 24, alignItems: "flex-start" }}>
-            <div style={{ background: "#f8fafc", borderRadius: 12, padding: isMobile ? 8 : 12, border: "1px solid #e2e8f0", flexShrink: 0 }}>
-              <SiteMapSaro clientes={data.clientes || {}} selected={selected} onSelect={setSelected} isMobile={isMobile} />
-            </div>
-            <div style={{ flex: 1, width: "100%", minWidth: 0 }}>
-              <BodegaDetail id={selected} data={data} setData={setData} isMobile={isMobile} project={project} />
             </div>
           </div>
         </div>
