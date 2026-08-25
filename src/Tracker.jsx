@@ -1320,13 +1320,37 @@ const BodegaDetail = ({ id, data, setData, isMobile }) => {
 const ClientesView = ({ data, setData, isMobile, project }) => {
   const [selected, setSelected] = useState("bodegaC");
   if (project?.id === "saro") {
+    const lat = 9.9661306, lng = -84.1044912;
+    const mapsUrl = "https://maps.app.goo.gl/RKYDbUGTFvGs29wr5";
+    const embedSrc = `https://maps.google.com/maps?q=${lat},${lng}&z=17&output=embed`;
     return (
-      <div style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 24 : 40, border: "1px dashed #cbd5e1", textAlign: "center" }}>
-        <div style={{ fontSize: 40, marginBottom: 10 }}>🏗️</div>
-        <h2 style={{ margin: "0 0 6px", fontSize: isMobile ? 15 : 18, fontWeight: 800, color: "#0c4a6e" }}>Bodegas pendientes de definir</h2>
-        <p style={{ margin: 0, fontSize: 12, color: "#64748b", lineHeight: 1.5, maxWidth: 420, marginLeft: "auto", marginRight: "auto" }}>
-          El mapa de bodegas para el proyecto {project?.short || "SARO"} se configurará una vez recibida la información del cliente.
-        </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 16 : 20, border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10, flexWrap: "wrap" }}>
+            <div>
+              <h2 style={{ margin: "0 0 2px", fontSize: isMobile ? 15 : 18, fontWeight: 800, color: "#0c4a6e" }}>📍 Ubicación del Proyecto SARO</h2>
+              <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>Coordenadas: {lat}, {lng}</p>
+            </div>
+            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" style={{ background: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd", borderRadius: 6, padding: "8px 14px", fontSize: 12, textDecoration: "none", fontWeight: 600, whiteSpace: "nowrap" }}>↗ Abrir en Google Maps</a>
+          </div>
+          <div style={{ position: "relative", width: "100%", paddingBottom: isMobile ? "75%" : "45%", borderRadius: 8, overflow: "hidden", border: "1px solid #e2e8f0" }}>
+            <iframe
+              src={embedSrc}
+              title="Ubicación proyecto SARO"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
+              allowFullScreen
+            />
+          </div>
+        </div>
+        <div style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 20 : 28, border: "1px dashed #cbd5e1", textAlign: "center" }}>
+          <div style={{ fontSize: 34, marginBottom: 8 }}>🏗️</div>
+          <h3 style={{ margin: "0 0 4px", fontSize: isMobile ? 14 : 16, fontWeight: 800, color: "#0c4a6e" }}>Bodegas pendientes de definir</h3>
+          <p style={{ margin: 0, fontSize: 12, color: "#64748b", lineHeight: 1.5, maxWidth: 420, marginLeft: "auto", marginRight: "auto" }}>
+            El mapa de bodegas para {project?.short || "SARO"} se configurará una vez recibida la información del cliente.
+          </p>
+        </div>
       </div>
     );
   }
