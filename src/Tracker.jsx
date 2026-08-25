@@ -907,13 +907,24 @@ const BitacoraView = ({ data, setData, isMobile, project }) => {
   const addE = () => { const mx = entries.length ? Math.max(...entries.map(e => e.id)) : 0; setData(prev => ({ ...prev, bitacora: [...(prev.bitacora||[]), { id: mx+1, fecha: new Date().toISOString().split("T")[0], participantes: "", frentes: "", acuerdos: "", compromisos: "", responsable: "", fechaLimite: "", cumplido: false }] })); };
   const upd = (id, f, v) => setData(prev => ({ ...prev, bitacora: prev.bitacora.map(e => e.id === id ? { ...e, [f]: v } : e) }));
   const del = (id) => setData(prev => ({ ...prev, bitacora: prev.bitacora.filter(e => e.id !== id) }));
+  const isStaleChunkError = (err) => {
+    const m = String(err?.message || err || "");
+    return /dynamically imported module|Failed to fetch|Importing a module script failed|ChunkLoadError/i.test(m);
+  };
+  const handleExportError = (err, kind) => {
+    if (isStaleChunkError(err)) {
+      if (confirm(`Se actualizó la app en el servidor. Hay que recargar para generar el ${kind}. ¿Recargar ahora?`)) window.location.reload();
+      return;
+    }
+    alert(`Error al generar el ${kind}: ` + (err?.message || err));
+  };
   const downloadDocx = async (entry) => {
     setGenerating(entry.id);
     try {
       const { generateMinutaWord } = await import("./wordExport.js");
       await generateMinutaWord({ entry, data, FRENTES, project });
     }
-    catch (err) { alert("Error al generar el Word: " + (err?.message || err)); }
+    catch (err) { handleExportError(err, "Word"); }
     finally { setGenerating(null); }
   };
   const downloadPpt = async (entry) => {
@@ -922,7 +933,7 @@ const BitacoraView = ({ data, setData, isMobile, project }) => {
       const { generateMinutaPpt } = await import("./pptExport.js");
       await generateMinutaPpt({ entry, data, FRENTES, project });
     }
-    catch (err) { alert("Error al generar el PowerPoint: " + (err?.message || err)); }
+    catch (err) { handleExportError(err, "PowerPoint"); }
     finally { setGeneratingPpt(null); }
   };
   return (
