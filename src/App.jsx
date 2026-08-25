@@ -3,7 +3,7 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase.js";
 import Login from "./Login.jsx";
-import Tracker, { initialData, initialDataBlank } from "./Tracker.jsx";
+import Tracker, { initialData, initialDataBlank, defaultCondicionesVenta } from "./Tracker.jsx";
 import ProjectSelector, { PROJECTS } from "./ProjectSelector.jsx";
 
 const DEBOUNCE_MS = 250;
@@ -163,8 +163,17 @@ export default function App() {
     saroMigrationRanRef.current = true;
     setData(prev => {
       const blank = initialDataBlank();
-      return { ...prev, clientes: blank.clientes };
+      return { ...prev, clientes: blank.clientes, condicionesVenta: prev.condicionesVenta || blank.condicionesVenta };
     });
+  }, [data, user, project]);
+
+  // SARO: seed condicionesVenta if missing (for docs migrated before this field existed)
+  const condMigrationRanRef = useRef(false);
+  useEffect(() => {
+    if (!data || !user || !project || project.id !== "saro" || condMigrationRanRef.current) return;
+    if (data.condicionesVenta) return;
+    condMigrationRanRef.current = true;
+    setData(prev => ({ ...prev, condicionesVenta: defaultCondicionesVenta() }));
   }, [data, user, project]);
 
   // One-time DEI bootstrap: Coyol only

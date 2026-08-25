@@ -1363,6 +1363,81 @@ const SiteMap = ({ clientes, selected, onSelect, isMobile }) => {
   );
 };
 
+const defaultCondicionesVenta = () => ({
+  sinBroker: [
+    { label: "Base de comisiones netas", pct: 3 },
+    { label: "Gastos fijos de formalización", pct: 1 },
+    { label: "Se reparte entre ambos", pct: 1.5 },
+  ],
+  conBroker: [
+    { label: "Formalización", pct: 1, role: "fixed" },
+    { label: "Broker", pct: 0, role: "broker" },
+    { label: "Base", pct: 4.5, role: "base" },
+  ],
+});
+
+const CondicionesVentaCard = ({ cond, onChange, isMobile }) => {
+  const upd = (group, idx, field, value) => onChange({
+    ...cond,
+    [group]: cond[group].map((r, i) => i === idx ? { ...r, [field]: value } : r),
+  });
+  const pctInput = (group, idx) => (
+    <LiveInput
+      value={cond[group][idx].pct}
+      onChange={e => upd(group, idx, "pct", parseFloat(e.target.value) || 0)}
+      style={{ width: 60, padding: "3px 6px", fontSize: 12, border: "1px solid #fde68a", borderRadius: 4, textAlign: "right", background: "#fffbeb", color: "#92400e", fontWeight: 700 }}
+      inputMode="decimal"
+    />
+  );
+  const labelInput = (group, idx) => (
+    <LiveInput
+      value={cond[group][idx].label}
+      onChange={e => upd(group, idx, "label", e.target.value)}
+      style={{ flex: 1, padding: "3px 6px", fontSize: 12, border: "1px solid transparent", borderRadius: 4, background: "transparent", color: "#334155" }}
+    />
+  );
+  const row = (group, idx) => (
+    <div key={idx} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+      <span style={{ color: "#94a3b8", fontSize: 11 }}>•</span>
+      {labelInput(group, idx)}
+      {pctInput(group, idx)}
+      <span style={{ fontSize: 11, color: "#78716c" }}>%</span>
+    </div>
+  );
+  return (
+    <div style={{ background: "linear-gradient(135deg, #fefce8 0%, #fef3c7 100%)", borderRadius: 12, padding: isMobile ? 14 : 18, border: "1px solid #fde68a" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ fontSize: 18 }}>💰</div>
+          <h3 style={{ margin: 0, fontSize: isMobile ? 14 : 15, fontWeight: 800, color: "#92400e" }}>Condiciones de Venta (editable)</h3>
+        </div>
+        <span style={{ fontSize: 10, color: "#a16207" }}>✏️ Click en cualquier valor para editar</span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
+        <div style={{ background: "#fff", borderRadius: 8, padding: 12, border: "1px solid #fde68a" }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#0369a1", marginBottom: 8 }}>1. Sin broker</div>
+          {cond.sinBroker.map((_, i) => row("sinBroker", i))}
+        </div>
+        <div style={{ background: "#fff", borderRadius: 8, padding: 12, border: "1px solid #fde68a" }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#0369a1", marginBottom: 8 }}>2. Con broker</div>
+          {cond.conBroker.map((r, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+              <span style={{ color: "#94a3b8", fontSize: 11 }}>•</span>
+              {labelInput("conBroker", i)}
+              {r.role === "broker"
+                ? <span style={{ fontSize: 11, color: "#7c3aed", fontWeight: 700, minWidth: 60, textAlign: "right" }}>X (por bodega)</span>
+                : r.role === "base"
+                  ? <><span style={{ fontSize: 11, color: "#0369a1" }}>{pctInput("conBroker", i)}% − X</span></>
+                  : <>{pctInput("conBroker", i)}<span style={{ fontSize: 11, color: "#78716c" }}>%</span></>
+              }
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const parseMoney = (v) => {
   if (v == null) return 0;
   const n = Number(String(v).replace(/[^0-9.\-]/g, ""));
@@ -1370,33 +1445,35 @@ const parseMoney = (v) => {
 };
 const fmtMoney = (n) => "$" + (Math.round(n * 100) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const ComisionBreakdown = ({ c, isMobile }) => {
+const ComisionBreakdown = ({ c, isMobile, cond }) => {
   const precio = parseMoney(c.precioVenta);
   const usaBroker = !!c.corredorUsado;
   const brokerX = parseMoney(c.corredorComision); // percent
+  const palette = ["#0369a1", "#f59e0b", "#15803d", "#7c3aed", "#dc2626"];
   const row = (label, pct, amount, color) => (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 10px", background: "#fff", borderRadius: 6, border: `1px solid ${color}30` }}>
       <div style={{ fontSize: 12, color: "#334155" }}>{label} <span style={{ color: "#64748b" }}>({pct}%)</span></div>
       <div style={{ fontSize: 13, fontWeight: 800, color }}>{fmtMoney(amount)}</div>
     </div>
   );
-  let rows, total;
+  let rows = [], total = 0;
   if (!usaBroker) {
-    const base = precio * 0.03, form = precio * 0.01, reparto = precio * 0.015;
-    total = base + form + reparto;
-    rows = [
-      row("Base comisiones netas", "3", base, "#0369a1"),
-      row("Gastos fijos de formalización", "1", form, "#f59e0b"),
-      row("Se reparte entre ambos", "1.5", reparto, "#15803d"),
-    ];
+    (cond?.sinBroker || []).forEach((r, i) => {
+      const amount = precio * (r.pct / 100);
+      total += amount;
+      rows.push(row(r.label, String(r.pct), amount, palette[i % palette.length]));
+    });
   } else {
-    const form = precio * 0.01, broker = precio * (brokerX / 100), base = precio * ((4.5 - brokerX) / 100);
-    total = form + broker + base;
-    rows = [
-      row("Formalización", "1", form, "#f59e0b"),
-      row(`Broker${c.corredorNombre ? ` (${c.corredorNombre})` : ""}`, brokerX.toString(), broker, "#7c3aed"),
-      row("Base", (4.5 - brokerX).toFixed(2), base, "#0369a1"),
-    ];
+    (cond?.conBroker || []).forEach((r, i) => {
+      let pct;
+      if (r.role === "broker") pct = brokerX;
+      else if (r.role === "base") pct = Math.max(0, r.pct - brokerX);
+      else pct = r.pct;
+      const amount = precio * (pct / 100);
+      total += amount;
+      const label = r.role === "broker" && c.corredorNombre ? `${r.label} (${c.corredorNombre})` : r.label;
+      rows.push(row(label, pct.toFixed(2).replace(/\.?0+$/, ""), amount, palette[i % palette.length]));
+    });
   }
   return (
     <div style={{ marginBottom: 12, padding: 12, background: "#fefce8", borderRadius: 8, border: "1px solid #fde68a" }}>
@@ -1489,7 +1566,7 @@ const BodegaDetail = ({ id, data, setData, isMobile, project }) => {
               </div>
             )}
           </div>
-          <ComisionBreakdown c={c} isMobile={isMobile} />
+          <ComisionBreakdown c={c} isMobile={isMobile} cond={data.condicionesVenta || defaultCondicionesVenta()} />
         </>
       )}
 
@@ -1520,30 +1597,11 @@ const ClientesView = ({ data, setData, isMobile, project }) => {
           </div>
         </div>
 
-        <div style={{ background: "linear-gradient(135deg, #fefce8 0%, #fef3c7 100%)", borderRadius: 12, padding: isMobile ? 14 : 18, border: "1px solid #fde68a" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-            <div style={{ fontSize: 18 }}>💰</div>
-            <h3 style={{ margin: 0, fontSize: isMobile ? 14 : 15, fontWeight: 800, color: "#92400e" }}>Condiciones de Venta (referencia)</h3>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
-            <div style={{ background: "#fff", borderRadius: 8, padding: 12, border: "1px solid #fde68a" }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#0369a1", marginBottom: 6 }}>1. Sin broker</div>
-              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#334155", lineHeight: 1.55 }}>
-                <li>Base <strong>3%</strong> de comisiones netas</li>
-                <li><strong>1%</strong> de gastos fijos de formalización</li>
-                <li><strong>1.5%</strong> se reparte entre ambos</li>
-              </ul>
-            </div>
-            <div style={{ background: "#fff", borderRadius: 8, padding: 12, border: "1px solid #fde68a" }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#0369a1", marginBottom: 6 }}>2. Con broker</div>
-              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#334155", lineHeight: 1.55 }}>
-                <li>Formalización <strong>1%</strong></li>
-                <li>Broker <strong>"X"</strong></li>
-                <li>Base <strong>4.5% − "X"</strong></li>
-              </ul>
-            </div>
-          </div>
-        </div>
+        <CondicionesVentaCard
+          cond={data.condicionesVenta || defaultCondicionesVenta()}
+          onChange={(v) => setData(prev => ({ ...prev, condicionesVenta: v }))}
+          isMobile={isMobile}
+        />
 
         <div style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 16 : 20, border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10, flexWrap: "wrap" }}>
@@ -1610,6 +1668,7 @@ const initialDataBlank = () => {
   });
   d.bitacora = [];
   d.maestros = { zen: [], dei: [], proyecto: [] };
+  d.condicionesVenta = defaultCondicionesVenta();
   d.clientes = Object.entries(SARO_BODEGA_META).reduce((acc, [num, m]) => {
     acc[`bodega${num}`] = { cliente: "", contacto: "", telefono: "", email: "",
       areaN1: m.n1, areaN2: m.n2, areaTotal: m.total,
@@ -1621,7 +1680,7 @@ const initialDataBlank = () => {
   return d;
 };
 
-export { initialData, initialDataBlank };
+export { initialData, initialDataBlank, defaultCondicionesVenta };
 export default function Tracker({ data, setData, user, onLogout, project, onSwitchProject }) {
   const isMobile = useIsMobile();
   const importRef = useRef();
