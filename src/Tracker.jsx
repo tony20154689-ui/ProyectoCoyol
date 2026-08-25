@@ -1344,6 +1344,23 @@ const ClientesView = ({ data, setData, isMobile, project }) => {
             />
           </div>
         </div>
+        <div style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 16 : 20, border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10, flexWrap: "wrap" }}>
+            <div>
+              <h2 style={{ margin: "0 0 2px", fontSize: isMobile ? 15 : 18, fontWeight: 800, color: "#0c4a6e" }}>📄 Planos del Proyecto — KF CB Santa Rosa (v2024)</h2>
+              <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>Actualizado 17-07-2026</p>
+            </div>
+            <a href="/docs/KF-CB-Santa-Rosa-v2024.pdf" download style={{ background: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd", borderRadius: 6, padding: "8px 14px", fontSize: 12, textDecoration: "none", fontWeight: 600, whiteSpace: "nowrap" }}>⬇ Descargar PDF</a>
+          </div>
+          <div style={{ position: "relative", width: "100%", paddingBottom: isMobile ? "125%" : "70%", borderRadius: 8, overflow: "hidden", border: "1px solid #e2e8f0", background: "#f8fafc" }}>
+            <iframe
+              src="/docs/KF-CB-Santa-Rosa-v2024.pdf#view=FitH"
+              title="Planos KF CB Santa Rosa v2024"
+              loading="lazy"
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
+            />
+          </div>
+        </div>
         <div style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 20 : 28, border: "1px dashed #cbd5e1", textAlign: "center" }}>
           <div style={{ fontSize: 34, marginBottom: 8 }}>🏗️</div>
           <h3 style={{ margin: "0 0 4px", fontSize: isMobile ? 14 : 16, fontWeight: 800, color: "#0c4a6e" }}>Bodegas pendientes de definir</h3>
