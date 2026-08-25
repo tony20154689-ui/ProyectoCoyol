@@ -154,6 +154,19 @@ export default function App() {
     return () => window.removeEventListener("beforeunload", handler);
   });
 
+  // SARO one-time migration: if clientes still uses Coyol's bodegaA/B/C schema, replace with D1-D6 grid
+  const saroMigrationRanRef = useRef(false);
+  useEffect(() => {
+    if (!data || !user || !project || project.id !== "saro" || saroMigrationRanRef.current) return;
+    const hasD1 = data.clientes?.bodegaD1 !== undefined;
+    if (hasD1) return;
+    saroMigrationRanRef.current = true;
+    setData(prev => {
+      const blank = initialDataBlank();
+      return { ...prev, clientes: blank.clientes };
+    });
+  }, [data, user, project]);
+
   // One-time DEI bootstrap: Coyol only
   const bootstrapRanRef = useRef(false);
   useEffect(() => {

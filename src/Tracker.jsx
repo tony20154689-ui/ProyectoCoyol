@@ -1175,6 +1175,77 @@ const MaestrosView = ({ data, setData, isMobile }) => {
 const BODEGA_ESTADOS = ["Disponible", "En Negociación", "Contrato Firmado", "Ocupada"];
 const BE_COLORS = { "Disponible": "#94a3b8", "En Negociación": "#f59e0b", "Contrato Firmado": "#0369a1", "Ocupada": "#0d9488" };
 
+const SARO_BODEGAS = ["bodegaD1", "bodegaD2", "bodegaD3", "bodegaD4", "bodegaD5", "bodegaD6"];
+const bodegaLabel = (id, projectId) => {
+  if (projectId === "saro") {
+    const n = id.replace(/^bodega/, "");
+    return `Bodega ${n}`;
+  }
+  return { bodegaA: "Bodega D1", bodegaB: "Bodega D2", bodegaC: "Bodega D3" }[id] || id;
+};
+
+const SiteMapSaro = ({ clientes, selected, onSelect, isMobile }) => {
+  const w = isMobile ? 340 : 520;
+  const h = isMobile ? 300 : 420;
+  const getColor = (id) => BE_COLORS[clientes[id]?.estado] || "#e2e8f0";
+  const getFill = (id) => {
+    const st = clientes[id]?.estado;
+    return st === "Disponible" ? "rgba(148,163,184,0.15)"
+      : st === "En Negociación" ? "rgba(245,158,11,0.15)"
+      : st === "Contrato Firmado" ? "rgba(3,105,161,0.15)"
+      : st === "Ocupada" ? "rgba(13,148,136,0.15)" : "#fff";
+  };
+  const cellW = 140, cellH = 150, gapX = 20, gapY = 40;
+  const originX = 30, originY = 30;
+  const positions = SARO_BODEGAS.map((id, i) => {
+    const col = i % 3, row = Math.floor(i / 3);
+    return { id, x: originX + col * (cellW + gapX), y: originY + row * (cellH + gapY) };
+  });
+  return (
+    <svg viewBox="0 0 520 420" width={w} height={h} style={{ display: "block", margin: "0 auto" }}>
+      <rect x="0" y="0" width="520" height="420" rx="12" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="1" />
+      {/* Access road */}
+      <rect x="20" y="200" width="480" height="16" fill="#e2e8f0" opacity="0.6" />
+      <text x="260" y="212" textAnchor="middle" fontSize="8" fill="#94a3b8" fontWeight="600">ACCESO</text>
+      {positions.map(({ id, x, y }) => {
+        const c = clientes[id] || {};
+        const isSel = selected === id;
+        const label = id.replace(/^bodega/, "");
+        return (
+          <g key={id} onClick={() => onSelect(id)} style={{ cursor: "pointer" }}>
+            <rect x={x} y={y} width={cellW} height={cellH} rx="6"
+              fill={getFill(id)}
+              stroke={isSel ? "#0369a1" : getColor(id)}
+              strokeWidth={isSel ? 3 : 1.5} />
+            {/* Dock lines */}
+            {Array.from({ length: 8 }).map((_, i2) => (
+              <line key={i2} x1={x} y1={y + 10 + i2 * 12} x2={x - 5} y2={y + 10 + i2 * 12} stroke="#cbd5e1" strokeWidth="1" />
+            ))}
+            <text x={x + cellW / 2} y={y + cellH / 2 - 8} textAnchor="middle" fontSize="18" fontWeight="800" fill={getColor(id)}>BODEGA {label}</text>
+            {c.area && <text x={x + cellW / 2} y={y + cellH / 2 + 10} textAnchor="middle" fontSize="10" fill="#64748b">{c.area}</text>}
+            {c.cliente && <text x={x + cellW / 2} y={y + cellH / 2 + 28} textAnchor="middle" fontSize="10" fontWeight="700" fill="#0f172a">{c.cliente}</text>}
+          </g>
+        );
+      })}
+      {/* North arrow */}
+      <g transform="translate(490,30)">
+        <circle r="14" fill="#fff" stroke="#cbd5e1" strokeWidth="1" />
+        <polygon points="0,-10 3,-2 -3,-2" fill="#0f172a" />
+        <text x="0" y="7" textAnchor="middle" fontSize="8" fontWeight="700" fill="#0f172a">N</text>
+      </g>
+      {/* Legend */}
+      <g transform="translate(20,395)">
+        {[["Disponible", "#94a3b8"], ["En Negociación", "#f59e0b"], ["Contrato", "#0369a1"], ["Ocupada", "#0d9488"]].map(([lbl, col], i) => (
+          <g key={lbl} transform={`translate(${i * 115}, 0)`}>
+            <rect width="10" height="10" rx="2" fill={col} />
+            <text x="14" y="9" fontSize="8" fill="#64748b">{lbl}</text>
+          </g>
+        ))}
+      </g>
+    </svg>
+  );
+};
+
 const SiteMap = ({ clientes, selected, onSelect, isMobile }) => {
   const w = isMobile ? 320 : 500;
   const h = isMobile ? 580 : 900;
@@ -1278,21 +1349,24 @@ const SiteMap = ({ clientes, selected, onSelect, isMobile }) => {
   );
 };
 
-const BodegaDetail = ({ id, data, setData, isMobile }) => {
-  const labels = { bodegaA: "Bodega D1", bodegaB: "Bodega D2", bodegaC: "Bodega D3" };
+const BodegaDetail = ({ id, data, setData, isMobile, project }) => {
   const c = data.clientes?.[id];
   if (!c) return null;
   const upd = (f, v) => setData(prev => ({ ...prev, clientes: { ...prev.clientes, [id]: { ...prev.clientes[id], [f]: v } } }));
+  const isSaro = project?.id === "saro";
 
   return (
     <div style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 14 : 20, border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <h3 style={{ margin: 0, fontSize: isMobile ? 15 : 17, fontWeight: 800, color: "#0c4a6e" }}>🏭 {labels[id]}</h3>
+        <h3 style={{ margin: 0, fontSize: isMobile ? 15 : 17, fontWeight: 800, color: "#0c4a6e" }}>🏭 {bodegaLabel(id, project?.id)}</h3>
         <span style={{ background: BE_COLORS[c.estado], color: "#fff", padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700 }}>{c.estado}</span>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 10, marginBottom: 12 }}>
-        <div><label style={s.lbl}>Área</label><div style={{ ...s.inp, background: "#f1f5f9", color: "#64748b" }}>{c.area}</div></div>
+        <div><label style={s.lbl}>Área</label>{isSaro
+          ? <input value={c.area} onChange={e => upd("area", e.target.value)} style={s.inp} placeholder="Ej: 5,000 m²" />
+          : <div style={{ ...s.inp, background: "#f1f5f9", color: "#64748b" }}>{c.area}</div>}
+        </div>
         <div><label style={s.lbl}>Estado</label><select value={c.estado} onChange={e => upd("estado", e.target.value)} style={s.inp}>{BODEGA_ESTADOS.map(o => <option key={o}>{o}</option>)}</select></div>
         <div><label style={s.lbl}>Cliente</label><input value={c.cliente} onChange={e => upd("cliente", e.target.value)} style={s.inp} placeholder="Nombre del cliente" /></div>
       </div>
@@ -1312,19 +1386,54 @@ const BodegaDetail = ({ id, data, setData, isMobile }) => {
 
       <div style={{ marginBottom: 12 }}><label style={s.lbl}>Notas</label><textarea value={c.notas} onChange={e => upd("notas", e.target.value)} rows={3} style={{ ...s.inp, resize: "vertical" }} /></div>
 
+      {isSaro && (
+        <div style={{ marginBottom: 12, padding: 12, background: "#f0fdf4", borderRadius: 8, border: "1px solid #bbf7d0" }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#15803d", marginBottom: 10 }}>💼 Datos de la venta</div>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10, marginBottom: 10 }}>
+            <div><label style={s.lbl}>Vendedor</label><input value={c.vendedor || ""} onChange={e => upd("vendedor", e.target.value)} style={s.inp} placeholder="Quien cerró la venta" /></div>
+            <div><label style={s.lbl}>¿Usó corredor?</label>
+              <select value={c.corredorUsado ? "si" : "no"} onChange={e => upd("corredorUsado", e.target.value === "si")} style={s.inp}>
+                <option value="no">No</option>
+                <option value="si">Sí</option>
+              </select>
+            </div>
+          </div>
+          {c.corredorUsado && (
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr", gap: 10 }}>
+              <div><label style={s.lbl}>Corredor / Inmobiliaria</label><input value={c.corredorNombre || ""} onChange={e => upd("corredorNombre", e.target.value)} style={s.inp} placeholder="Nombre del corredor" /></div>
+              <div><label style={s.lbl}>Comisión (%)</label><input value={c.corredorComision || ""} onChange={e => upd("corredorComision", e.target.value)} style={s.inp} placeholder="Ej: 3" /></div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div><label style={s.lbl}>Documentos del cliente</label><FileAttachments archivos={c.archivos||[]} onChange={v => upd("archivos", v)} title={c.cliente || c.empresa || c.nombre || ""} /></div>
     </div>
   );
 };
 
 const ClientesView = ({ data, setData, isMobile, project }) => {
-  const [selected, setSelected] = useState("bodegaC");
+  const defaultSel = project?.id === "saro" ? "bodegaD1" : "bodegaC";
+  const [selected, setSelected] = useState(defaultSel);
   if (project?.id === "saro") {
     const lat = 9.9661306, lng = -84.1044912;
     const mapsUrl = "https://maps.app.goo.gl/RKYDbUGTFvGs29wr5";
     const embedSrc = `https://maps.google.com/maps?q=${lat},${lng}&z=17&output=embed`;
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 16 : 20, border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <h2 style={{ margin: "0 0 4px", fontSize: isMobile ? 15 : 18, fontWeight: 800, color: "#0c4a6e" }}>Mapa del Proyecto — Asignación de Clientes</h2>
+          <p style={{ margin: "0 0 12px", fontSize: 11, color: "#94a3b8" }}>Toca una bodega para ver y editar los datos del cliente</p>
+          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 16 : 24, alignItems: "flex-start" }}>
+            <div style={{ background: "#f8fafc", borderRadius: 12, padding: isMobile ? 8 : 12, border: "1px solid #e2e8f0", flexShrink: 0 }}>
+              <SiteMapSaro clientes={data.clientes || {}} selected={selected} onSelect={setSelected} isMobile={isMobile} />
+            </div>
+            <div style={{ flex: 1, width: "100%", minWidth: 0 }}>
+              <BodegaDetail id={selected} data={data} setData={setData} isMobile={isMobile} project={project} />
+            </div>
+          </div>
+        </div>
+
         <div style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 16 : 20, border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10, flexWrap: "wrap" }}>
             <div>
@@ -1344,6 +1453,7 @@ const ClientesView = ({ data, setData, isMobile, project }) => {
             />
           </div>
         </div>
+
         <div style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 16 : 20, border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10, flexWrap: "wrap" }}>
             <div>
@@ -1361,13 +1471,6 @@ const ClientesView = ({ data, setData, isMobile, project }) => {
             />
           </div>
         </div>
-        <div style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 20 : 28, border: "1px dashed #cbd5e1", textAlign: "center" }}>
-          <div style={{ fontSize: 34, marginBottom: 8 }}>🏗️</div>
-          <h3 style={{ margin: "0 0 4px", fontSize: isMobile ? 14 : 16, fontWeight: 800, color: "#0c4a6e" }}>Bodegas pendientes de definir</h3>
-          <p style={{ margin: 0, fontSize: 12, color: "#64748b", lineHeight: 1.5, maxWidth: 420, marginLeft: "auto", marginRight: "auto" }}>
-            El mapa de bodegas para {project?.short || "SARO"} se configurará una vez recibida la información del cliente.
-          </p>
-        </div>
       </div>
     );
   }
@@ -1381,7 +1484,7 @@ const ClientesView = ({ data, setData, isMobile, project }) => {
           <SiteMap clientes={data.clientes || {}} selected={selected} onSelect={setSelected} isMobile={isMobile} />
         </div>
         <div style={{ flex: 1, width: "100%", minWidth: 0 }}>
-          <BodegaDetail id={selected} data={data} setData={setData} isMobile={isMobile} />
+          <BodegaDetail id={selected} data={data} setData={setData} isMobile={isMobile} project={project} />
         </div>
       </div>
     </div>
@@ -1396,11 +1499,10 @@ const initialDataBlank = () => {
   });
   d.bitacora = [];
   d.maestros = { zen: [], dei: [], proyecto: [] };
-  d.clientes = {
-    bodegaA: { cliente: "", contacto: "", telefono: "", email: "", area: "", renta: "", plazo: "", inicioContrato: "", estado: "Disponible", notas: "", archivos: [] },
-    bodegaB: { cliente: "", contacto: "", telefono: "", email: "", area: "", renta: "", plazo: "", inicioContrato: "", estado: "Disponible", notas: "", archivos: [] },
-    bodegaC: { cliente: "", contacto: "", telefono: "", email: "", area: "", renta: "", plazo: "", inicioContrato: "", estado: "Disponible", notas: "", archivos: [] },
-  };
+  d.clientes = SARO_BODEGAS.reduce((acc, id) => {
+    acc[id] = { cliente: "", contacto: "", telefono: "", email: "", area: "", renta: "", plazo: "", inicioContrato: "", estado: "Disponible", notas: "", archivos: [], vendedor: "", corredorUsado: false, corredorNombre: "", corredorComision: "" };
+    return acc;
+  }, {});
   return d;
 };
 
