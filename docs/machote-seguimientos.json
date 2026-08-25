@@ -1,0 +1,118 @@
+{
+  "_doc": "Machote de seguimientos — plantilla oficial para proyectos. Cargable programáticamente. Espejo estructural de initialDataBlank() en src/Tracker.jsx.",
+  "frentes": [
+    { "id": "financiero",       "name": "Financiero",           "full": "Estructuración Financiera",              "icon": "💰" },
+    { "id": "legal",            "name": "Legal",                "full": "Estructuración Legal",                   "icon": "⚖️" },
+    { "id": "fiscal",           "name": "Fiscal",               "full": "Estructuración Fiscal",                  "icon": "📋" },
+    { "id": "permisologia",     "name": "Diseño y Permisología","full": "Diseño y Permisología",                  "icon": "📄" },
+    { "id": "comercializacion", "name": "Comercialización",     "full": "Pre-colocación / Comercialización",      "icon": "🏢" },
+    { "id": "construccion",     "name": "Construcción",         "full": "Movimientos de Tierra / Construcción",   "icon": "🏗️" },
+    { "id": "entregas",         "name": "Entregas",             "full": "Entregas de Bodegas",                    "icon": "🔑" },
+    { "id": "puesta",           "name": "Property Management",  "full": "Property Management",                    "icon": "🚀" }
+  ],
+  "estados": ["Pendiente", "En Proceso", "Completado", "Bloqueado", "N/A"],
+  "prioridades": ["Alta", "Media", "Baja"],
+  "seguimientos": {
+    "financiero": [
+      { "area": "Crédito / Banco", "tarea": "Apoyo en solicitudes de crédito ante entidad financiera", "responsable": "DEINDUSTRIAL / ZEN",   "prioridad": "Alta" },
+      { "area": "Crédito / Banco", "tarea": "Actualizaciones bancarias y gestión de servicios de deuda", "responsable": "DEINDUSTRIAL / ZEN", "prioridad": "Alta" },
+      { "area": "Crédito / Banco", "tarea": "Acceso y configuración de cuentas bancarias", "responsable": "DEINDUSTRIAL / ZEN",              "prioridad": "Alta" },
+      { "area": "Crédito / Banco", "tarea": "Decisión de fondeo cliente ancla", "responsable": "DEINDUSTRIAL / ZEN",                        "prioridad": "Alta" },
+      { "area": "Facturación", "tarea": "Definición inicio recepción de facturas", "responsable": "Antony Aguilar / ZEN",                   "prioridad": "Alta" },
+      { "area": "Facturación", "tarea": "Emisión de facturas electrónicas", "responsable": "Antony Aguilar / ZEN",                          "prioridad": "Alta" },
+      { "area": "Facturación", "tarea": "Recepción y validación facturas proveedores", "responsable": "Antony Aguilar / ZEN",                "prioridad": "Alta" },
+      { "area": "Facturación", "tarea": "Pago oportuno de facturas aprobadas", "responsable": "Antony Aguilar / ZEN",                       "prioridad": "Alta" },
+      { "area": "Maestros", "tarea": "Conciliar Maestro del Proyecto", "responsable": "DEINDUSTRIAL / ZEN",                                  "prioridad": "Alta" },
+      { "area": "Maestros", "tarea": "Maestro de las Desarrolladoras (GZCR / DEI)", "responsable": "DEINDUSTRIAL / ZEN",                    "prioridad": "Alta" },
+      { "area": "Maestros", "tarea": "Plan de Negocios - Modelo Financiero", "responsable": "DEINDUSTRIAL",                                  "prioridad": "Alta" },
+      { "area": "Maestros", "tarea": "Plan de Negocios - EERR y flujo de caja", "responsable": "DEINDUSTRIAL",                              "prioridad": "Alta" },
+      { "area": "Maestros", "tarea": "Master Plan", "responsable": "DEINDUSTRIAL",                                                           "prioridad": "Alta" },
+      { "area": "Contabilidad", "tarea": "Control contabilidad mensual y EEFF", "responsable": "Noelia Calderón",                           "prioridad": "Alta" },
+      { "area": "Contabilidad", "tarea": "Cierre contable anual y auditoría", "responsable": "Noelia Calderón",                             "prioridad": "Media" }
+    ],
+    "legal": [
+      { "area": "Societario", "tarea": "Revisión acta constitutiva / pacto social", "responsable": "Asesor Legal / ZEN", "prioridad": "Alta" },
+      { "area": "Societario", "tarea": "Actas de asamblea según necesidades",       "responsable": "Asesor Legal / ZEN", "prioridad": "Alta" },
+      { "area": "Societario", "tarea": "Formalización aportes de capital",          "responsable": "Asesor Legal / ZEN", "prioridad": "Alta" },
+      { "area": "Societario", "tarea": "Documentación devoluciones capital",        "responsable": "Asesor Legal / ZEN", "prioridad": "Media" },
+      { "area": "Contratos",  "tarea": "Revisión contratos desarrolladora(s)",      "responsable": "Asesor Legal / ZEN", "prioridad": "Alta" },
+      { "area": "Contratos",  "tarea": "Contratos arrendamiento bodegas",           "responsable": "Asesor Legal / ZEN", "prioridad": "Alta" },
+      { "area": "Otros",      "tarea": "Poderes notariales vigentes",                "responsable": "Asesor Legal / ZEN", "prioridad": "Media" },
+      { "area": "Contratos",  "tarea": "Contratos arrendamiento (2do lote)",        "responsable": "Asesor Legal / ZEN", "prioridad": "Alta" },
+      { "area": "Otros",      "tarea": "Poderes notariales (JG)",                    "responsable": "Asesor Legal / ZEN", "prioridad": "Media" },
+      { "area": "Otros",      "tarea": "Registro Transparencia y Beneficiarios",    "responsable": "Asesor Legal / ZEN", "prioridad": "Alta" }
+    ],
+    "fiscal": [
+      { "area": "Inscripción",   "tarea": "Inscripción contribuyente ante DGTD",     "responsable": "Asesor Fiscal / Antony", "prioridad": "Alta" },
+      { "area": "Declaraciones", "tarea": "Declaraciones IVA mensuales (D-150)",     "responsable": "Asesor Fiscal / Antony", "prioridad": "Alta" },
+      { "area": "Declaraciones", "tarea": "Retenciones en la fuente",                 "responsable": "Asesor Fiscal / Antony", "prioridad": "Alta" },
+      { "area": "Declaraciones", "tarea": "Impuesto sobre la renta anual",           "responsable": "Asesor Fiscal / Antony", "prioridad": "Alta" },
+      { "area": "Declaraciones", "tarea": "Impuesto personas jurídicas",             "responsable": "Asesor Fiscal / Antony", "prioridad": "Alta" },
+      { "area": "Declaraciones", "tarea": "Timbre educación y cultura",              "responsable": "Asesor Fiscal / Antony", "prioridad": "Alta" },
+      { "area": "Cumplimiento",  "tarea": "Declaración partes relacionadas",         "responsable": "Asesor Fiscal / Antony", "prioridad": "Media" },
+      { "area": "Cumplimiento",  "tarea": "Obligaciones tributarias municipales",   "responsable": "Asesor Fiscal / Antony", "prioridad": "Media" }
+    ],
+    "permisologia": [
+      { "area": "CFIA",          "tarea": "Visa planos constructivos ante CFIA",     "responsable": "DEINDUSTRIAL", "prioridad": "Alta" },
+      { "area": "SETENA",        "tarea": "Viabilidad ambiental (EIA)",              "responsable": "DEINDUSTRIAL", "prioridad": "Alta" },
+      { "area": "Municipalidad", "tarea": "Permiso construcción",                     "responsable": "DEINDUSTRIAL", "prioridad": "Alta" },
+      { "area": "Municipalidad", "tarea": "Alineamientos viales y acceso",           "responsable": "DEINDUSTRIAL", "prioridad": "Alta" },
+      { "area": "AyA / ESPH",    "tarea": "Conexión agua potable",                   "responsable": "DEINDUSTRIAL", "prioridad": "Alta" },
+      { "area": "ICE / CNFL",    "tarea": "Conexión energía eléctrica",              "responsable": "DEINDUSTRIAL", "prioridad": "Alta" },
+      { "area": "Bomberos",      "tarea": "Visado planos contra incendios",          "responsable": "DEINDUSTRIAL", "prioridad": "Alta" },
+      { "area": "Min. Salud",    "tarea": "Permisos sanitarios (PTAR)",              "responsable": "DEINDUSTRIAL", "prioridad": "Media" },
+      { "area": "MOPT",          "tarea": "Acceso red vial nacional",                "responsable": "DEINDUSTRIAL", "prioridad": "Alta" },
+      { "area": "Seg. ZEN",      "tarea": "Archivo permisos obtenidos",              "responsable": "Antony / ZEN", "prioridad": "Alta" },
+      { "area": "Seg. ZEN",      "tarea": "Monitoreo vencimientos permisos",         "responsable": "Antony",        "prioridad": "Media" },
+      { "area": "Seg. ZEN",      "tarea": "Permiso Obra en Cause - MINAE",           "responsable": "DEINDUSTRIAL", "prioridad": "Alta" }
+    ],
+    "comercializacion": [
+      { "area": "Mercado",     "tarea": "Análisis tarifas Zona Franca",           "responsable": "DEINDUSTRIAL",         "prioridad": "Media" },
+      { "area": "Mercado",     "tarea": "Perfil bodega y cliente objetivo",       "responsable": "DEINDUSTRIAL",         "prioridad": "Alta" },
+      { "area": "Prospección", "tarea": "Listado prospectos pre-colocación",      "responsable": "DEINDUSTRIAL",         "prioridad": "Alta" },
+      { "area": "Prospección", "tarea": "Presentación a prospectos",              "responsable": "DEINDUSTRIAL",         "prioridad": "Alta" },
+      { "area": "Negociación", "tarea": "Condiciones de arrendamiento / venta",   "responsable": "DEINDUSTRIAL",         "prioridad": "Alta" },
+      { "area": "Negociación", "tarea": "LOI firmadas",                            "responsable": "DEINDUSTRIAL",         "prioridad": "Alta" },
+      { "area": "Contratos",   "tarea": "Formalización contratos",                 "responsable": "DEINDUSTRIAL / Legal", "prioridad": "Alta" },
+      { "area": "Contratos",   "tarea": "Depósitos y garantías",                   "responsable": "Antony",               "prioridad": "Alta" },
+      { "area": "Gestión",     "tarea": "Pipeline comercial",                      "responsable": "DEINDUSTRIAL",         "prioridad": "Media" },
+      { "area": "Gestión",     "tarea": "Visitas prospectos al terreno",          "responsable": "DEINDUSTRIAL",         "prioridad": "Media" }
+    ],
+    "construccion": [
+      { "area": "Mov. Tierra", "tarea": "Movimientos de tierra",                   "responsable": "DEINDUSTRIAL / Zebol", "prioridad": "Alta" },
+      { "area": "Mov. Tierra", "tarea": "Topografía y trazado",                    "responsable": "DEINDUSTRIAL / Zebol", "prioridad": "Alta" },
+      { "area": "Infraestr.",  "tarea": "Vías internas y accesos",                 "responsable": "DEINDUSTRIAL / Zebol", "prioridad": "Alta" },
+      { "area": "Infraestr.",  "tarea": "Redes agua pluvial y sanitaria",         "responsable": "DEINDUSTRIAL / Zebol", "prioridad": "Alta" },
+      { "area": "Infraestr.",  "tarea": "Red eléctrica e iluminación",             "responsable": "DEINDUSTRIAL / Zebol", "prioridad": "Alta" },
+      { "area": "Estructura",  "tarea": "Cimentaciones y estructuras",             "responsable": "DEINDUSTRIAL / Zebol", "prioridad": "Alta" },
+      { "area": "Estructura",  "tarea": "Paredes, techos y cerramientos",         "responsable": "DEINDUSTRIAL / Zebol", "prioridad": "Alta" },
+      { "area": "Acabados",    "tarea": "Puertas, portones y seguridad",           "responsable": "DEINDUSTRIAL / Zebol", "prioridad": "Alta" },
+      { "area": "Acabados",    "tarea": "Acabados interiores y exteriores",       "responsable": "DEINDUSTRIAL / Zebol", "prioridad": "Media" },
+      { "area": "Control",     "tarea": "Supervisión e inspección",                "responsable": "ZEN / DEINDUSTRIAL",   "prioridad": "Alta" },
+      { "area": "Control",     "tarea": "Valuaciones de obra",                     "responsable": "ZEN / DEINDUSTRIAL",   "prioridad": "Alta" },
+      { "area": "Control",     "tarea": "Cronograma construcción",                 "responsable": "ZEN / DEINDUSTRIAL",   "prioridad": "Alta" },
+      { "area": "Control",     "tarea": "Gestión cambios al alcance",              "responsable": "ZEN / DEINDUSTRIAL",   "prioridad": "Media" }
+    ],
+    "entregas": [
+      { "area": "Planificación", "tarea": "Cronograma entregas por bodega",         "responsable": "DEINDUSTRIAL / ZEN",   "prioridad": "Alta" },
+      { "area": "Planificación", "tarea": "Checklist entrega por bodega",           "responsable": "ZEN",                  "prioridad": "Alta" },
+      { "area": "Entrega",       "tarea": "Inspección previa: acabados",            "responsable": "ZEN / Inspector",      "prioridad": "Alta" },
+      { "area": "Entrega",       "tarea": "Acta de entrega firmada",                 "responsable": "Asesor Legal / ZEN",   "prioridad": "Alta" },
+      { "area": "Entrega",       "tarea": "Inventario de condiciones",               "responsable": "ZEN",                  "prioridad": "Alta" },
+      { "area": "Entrega",       "tarea": "Llaves, accesos y manuales",              "responsable": "Desarrollador",        "prioridad": "Alta" },
+      { "area": "Post-Entrega",  "tarea": "Garantías de construcción",               "responsable": "ZEN / Desarrollador",  "prioridad": "Media" },
+      { "area": "Post-Entrega",  "tarea": "Defectos post-entrega",                   "responsable": "DEINDUSTRIAL",         "prioridad": "Media" }
+    ],
+    "puesta": [
+      { "area": "Operaciones",  "tarea": "Modelo operativo del proyecto",           "responsable": "DEINDUSTRIAL / ZEN",   "prioridad": "Alta" },
+      { "area": "Operaciones",  "tarea": "Seguridad y vigilancia",                   "responsable": "DEINDUSTRIAL / Zebol", "prioridad": "Alta" },
+      { "area": "Operaciones",  "tarea": "Limpieza y mantenimiento",                 "responsable": "DEINDUSTRIAL / Zebol", "prioridad": "Media" },
+      { "area": "Operaciones",  "tarea": "Reglamento interno parque",                "responsable": "Asesor Legal / ZEN",   "prioridad": "Alta" },
+      { "area": "Facturación",  "tarea": "Sistema facturación alquileres / ventas", "responsable": "Antony",               "prioridad": "Alta" },
+      { "area": "Facturación",  "tarea": "Primer ciclo facturación",                 "responsable": "Antony",               "prioridad": "Alta" },
+      { "area": "Facturación",  "tarea": "Cobro depósitos y alquileres",             "responsable": "Antony",               "prioridad": "Alta" },
+      { "area": "Reportes",     "tarea": "Primer reporte financiero",                "responsable": "Antony / Noelia",      "prioridad": "Alta" },
+      { "area": "Reportes",     "tarea": "Reunión cierre y arranque",                "responsable": "ZEN / Socios",         "prioridad": "Alta" }
+    ]
+  }
+}
