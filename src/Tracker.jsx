@@ -1442,39 +1442,39 @@ const BodegaDetail = ({ id, data, setData, isMobile, project }) => {
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : (isSaro ? "1fr 1fr" : "1fr 1fr 1fr"), gap: 10, marginBottom: 12 }}>
         {!isSaro && <div><label style={s.lbl}>Área</label><div style={{ ...s.inp, background: "#f1f5f9", color: "#64748b" }}>{c.area}</div></div>}
         <div><label style={s.lbl}>Estado</label><select value={c.estado} onChange={e => upd("estado", e.target.value)} style={s.inp}>{BODEGA_ESTADOS.map(o => <option key={o}>{o}</option>)}</select></div>
-        <div><label style={s.lbl}>Cliente</label><input value={c.cliente} onChange={e => upd("cliente", e.target.value)} style={s.inp} placeholder="Nombre del cliente" /></div>
+        <div><label style={s.lbl}>Cliente</label><LiveInput value={c.cliente} onChange={e => upd("cliente", e.target.value)} style={s.inp} placeholder="Nombre del cliente" /></div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 10, marginBottom: 12 }}>
-        <div><label style={s.lbl}>Contacto</label><input value={c.contacto} onChange={e => upd("contacto", e.target.value)} style={s.inp} placeholder="Nombre de contacto" /></div>
-        <div><label style={s.lbl}>Teléfono</label><input value={c.telefono} onChange={e => upd("telefono", e.target.value)} style={s.inp} placeholder="+506 ..." /></div>
-        <div><label style={s.lbl}>Email</label><input value={c.email} onChange={e => upd("email", e.target.value)} style={s.inp} placeholder="email@empresa.com" /></div>
+        <div><label style={s.lbl}>Contacto</label><LiveInput value={c.contacto} onChange={e => upd("contacto", e.target.value)} style={s.inp} placeholder="Nombre de contacto" /></div>
+        <div><label style={s.lbl}>Teléfono</label><LiveInput value={c.telefono} onChange={e => upd("telefono", e.target.value)} style={s.inp} placeholder="+506 ..." /></div>
+        <div><label style={s.lbl}>Email</label><LiveInput value={c.email} onChange={e => upd("email", e.target.value)} style={s.inp} placeholder="email@empresa.com" /></div>
       </div>
 
       {isSaro ? (
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10, marginBottom: 12 }}>
-          <div><label style={s.lbl}>Precio de venta</label><input value={c.precioVenta || ""} onChange={e => upd("precioVenta", e.target.value)} style={s.inp} placeholder="$0.00" /></div>
+          <div><label style={s.lbl}>Precio de venta</label><LiveInput value={c.precioVenta || ""} onChange={e => upd("precioVenta", e.target.value)} style={s.inp} placeholder="$0.00" /></div>
           <div><label style={s.lbl}>Fecha de venta</label><input type="date" value={c.fechaVenta || ""} onChange={e => upd("fechaVenta", e.target.value)} style={s.inp} /></div>
         </div>
       ) : (
         <>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr", gap: 10, marginBottom: 12 }}>
-            <div><label style={s.lbl}>Renta mensual</label><input value={c.renta} onChange={e => upd("renta", e.target.value)} style={s.inp} placeholder="$0.00" /></div>
-            <div><label style={s.lbl}>Plazo contrato</label><input value={c.plazo} onChange={e => upd("plazo", e.target.value)} style={s.inp} placeholder="Ej: 5 años" /></div>
+            <div><label style={s.lbl}>Renta mensual</label><LiveInput value={c.renta} onChange={e => upd("renta", e.target.value)} style={s.inp} placeholder="$0.00" /></div>
+            <div><label style={s.lbl}>Plazo contrato</label><LiveInput value={c.plazo} onChange={e => upd("plazo", e.target.value)} style={s.inp} placeholder="Ej: 5 años" /></div>
             {!isMobile && <div><label style={s.lbl}>Inicio contrato</label><input type="date" value={c.inicioContrato} onChange={e => upd("inicioContrato", e.target.value)} style={s.inp} /></div>}
           </div>
           {isMobile && <div style={{ marginBottom: 12 }}><label style={s.lbl}>Inicio contrato</label><input type="date" value={c.inicioContrato} onChange={e => upd("inicioContrato", e.target.value)} style={s.inp} /></div>}
         </>
       )}
 
-      <div style={{ marginBottom: 12 }}><label style={s.lbl}>Notas</label><textarea value={c.notas} onChange={e => upd("notas", e.target.value)} rows={3} style={{ ...s.inp, resize: "vertical" }} /></div>
+      <div style={{ marginBottom: 12 }}><label style={s.lbl}>Notas</label><LiveTextarea value={c.notas} onChange={e => upd("notas", e.target.value)} rows={3} style={{ ...s.inp, resize: "vertical" }} /></div>
 
       {isSaro && (
         <>
           <div style={{ marginBottom: 12, padding: 12, background: "#f0fdf4", borderRadius: 8, border: "1px solid #bbf7d0" }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: "#15803d", marginBottom: 10 }}>💼 Datos de la venta</div>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10, marginBottom: 10 }}>
-              <div><label style={s.lbl}>Vendedor</label><input value={c.vendedor || ""} onChange={e => upd("vendedor", e.target.value)} style={s.inp} placeholder="Quien cerró la venta" /></div>
+              <div><label style={s.lbl}>Vendedor</label><LiveInput value={c.vendedor || ""} onChange={e => upd("vendedor", e.target.value)} style={s.inp} placeholder="Quien cerró la venta" /></div>
               <div><label style={s.lbl}>¿Usó corredor?</label>
                 <select value={c.corredorUsado ? "si" : "no"} onChange={e => upd("corredorUsado", e.target.value === "si")} style={s.inp}>
                   <option value="no">No</option>
@@ -1484,8 +1484,8 @@ const BodegaDetail = ({ id, data, setData, isMobile, project }) => {
             </div>
             {c.corredorUsado && (
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr", gap: 10 }}>
-                <div><label style={s.lbl}>Corredor / Inmobiliaria</label><input value={c.corredorNombre || ""} onChange={e => upd("corredorNombre", e.target.value)} style={s.inp} placeholder="Nombre del corredor" /></div>
-                <div><label style={s.lbl}>Comisión broker "X" (%)</label><input value={c.corredorComision || ""} onChange={e => upd("corredorComision", e.target.value)} style={s.inp} placeholder="Ej: 2" /></div>
+                <div><label style={s.lbl}>Corredor / Inmobiliaria</label><LiveInput value={c.corredorNombre || ""} onChange={e => upd("corredorNombre", e.target.value)} style={s.inp} placeholder="Nombre del corredor" /></div>
+                <div><label style={s.lbl}>Comisión broker "X" (%)</label><LiveInput value={c.corredorComision || ""} onChange={e => upd("corredorComision", e.target.value)} style={s.inp} placeholder="Ej: 2" /></div>
               </div>
             )}
           </div>
