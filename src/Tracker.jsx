@@ -1680,8 +1680,111 @@ const initialDataBlank = () => {
   return d;
 };
 
-export { initialData, initialDataBlank, defaultCondicionesVenta };
-export default function Tracker({ data, setData, user, onLogout, project, onSwitchProject }) {
+const defaultMachote = () => {
+  const seed = initialData();
+  const stripTask = (t) => ({ area: t.area, tarea: t.tarea, responsable: t.responsable, prioridad: t.prioridad });
+  const result = {};
+  ["financiero", "legal", "fiscal", "permisologia", "comercializacion", "construccion", "entregas", "puesta"].forEach(k => {
+    result[k] = (seed[k] || []).map(stripTask);
+  });
+  return result;
+};
+
+const MachoteView = ({ machote, setMachote, isMobile }) => {
+  const [openFrente, setOpenFrente] = useState(FRENTES[0].id);
+  if (!machote) return <div style={{ padding: 20, color: "#94a3b8", fontSize: 13 }}>Cargando machote…</div>;
+  const rows = machote[openFrente] || [];
+  const updRow = (idx, field, value) => setMachote(prev => ({
+    ...prev,
+    [openFrente]: prev[openFrente].map((r, i) => i === idx ? { ...r, [field]: value } : r),
+  }));
+  const addRow = () => setMachote(prev => ({
+    ...prev,
+    [openFrente]: [...(prev[openFrente] || []), { area: "", tarea: "", responsable: "", prioridad: "Media" }],
+  }));
+  const delRow = (idx) => {
+    if (!confirm("¿Eliminar esta tarea del machote?")) return;
+    setMachote(prev => ({ ...prev, [openFrente]: prev[openFrente].filter((_, i) => i !== idx) }));
+  };
+  const resetToDefault = () => {
+    if (!confirm("¿Restablecer el machote a los valores por defecto? Se pierden todos los cambios.")) return;
+    setMachote(defaultMachote());
+  };
+  const totalTasks = Object.values(machote).reduce((a, arr) => a + (arr?.length || 0), 0);
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 12, flexWrap: "wrap" }}>
+        <div>
+          <h2 style={{ margin: "0 0 4px", fontSize: isMobile ? 15 : 18, fontWeight: 800, color: "#0c4a6e" }}>📝 Machote de Seguimientos</h2>
+          <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>Plantilla base compartida entre proyectos ({totalTasks} tareas). Editable aquí, no afecta seguimientos activos.</p>
+        </div>
+        <button onClick={resetToDefault} style={{ background: "#fff", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 6, padding: "6px 12px", fontSize: 11, cursor: "pointer", fontWeight: 600 }}>Restablecer defaults</button>
+      </div>
+
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14, background: "#fff", padding: 10, borderRadius: 10, border: "1px solid #e2e8f0" }}>
+        {FRENTES.map(f => (
+          <button key={f.id} onClick={() => setOpenFrente(f.id)} style={{
+            background: openFrente === f.id ? "#0369a1" : "#f8fafc",
+            color: openFrente === f.id ? "#fff" : "#334155",
+            border: "1px solid " + (openFrente === f.id ? "#0369a1" : "#e2e8f0"),
+            borderRadius: 6, padding: "6px 10px", fontSize: 11, cursor: "pointer", fontWeight: 600,
+            display: "flex", alignItems: "center", gap: 5,
+          }}>
+            <span>{f.icon}</span><span>{isMobile ? f.short : f.name}</span>
+            <span style={{ background: openFrente === f.id ? "rgba(255,255,255,0.25)" : "#e2e8f0", color: openFrente === f.id ? "#fff" : "#64748b", borderRadius: 10, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{machote[f.id]?.length || 0}</span>
+          </button>
+        ))}
+      </div>
+
+      <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", overflow: "hidden" }}>
+        <div style={{ padding: "12px 16px", borderBottom: "1px solid #e2e8f0", background: "#f8fafc" }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: "#0c4a6e" }}>{FRENTES.find(f => f.id === openFrente)?.icon} {FRENTES.find(f => f.id === openFrente)?.full}</div>
+        </div>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, minWidth: isMobile ? 600 : 0 }}>
+            <thead>
+              <tr style={{ background: "#f1f5f9" }}>
+                <th style={{ textAlign: "left", padding: "8px 10px", color: "#64748b", fontWeight: 700, fontSize: 10, textTransform: "uppercase", width: 40 }}>#</th>
+                <th style={{ textAlign: "left", padding: "8px 10px", color: "#64748b", fontWeight: 700, fontSize: 10, textTransform: "uppercase", width: 130 }}>Área</th>
+                <th style={{ textAlign: "left", padding: "8px 10px", color: "#64748b", fontWeight: 700, fontSize: 10, textTransform: "uppercase" }}>Tarea</th>
+                <th style={{ textAlign: "left", padding: "8px 10px", color: "#64748b", fontWeight: 700, fontSize: 10, textTransform: "uppercase", width: 160 }}>Responsable</th>
+                <th style={{ textAlign: "left", padding: "8px 10px", color: "#64748b", fontWeight: 700, fontSize: 10, textTransform: "uppercase", width: 100 }}>Prioridad</th>
+                <th style={{ width: 40 }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.length === 0 && (
+                <tr><td colSpan={6} style={{ padding: 20, textAlign: "center", color: "#94a3b8", fontStyle: "italic" }}>Sin tareas — agregá la primera con el botón de abajo.</td></tr>
+              )}
+              {rows.map((r, i) => (
+                <tr key={i} style={{ borderTop: "1px solid #f1f5f9" }}>
+                  <td style={{ padding: "6px 10px", color: "#94a3b8", fontWeight: 700 }}>{i + 1}</td>
+                  <td style={{ padding: "6px 10px" }}><LiveInput value={r.area} onChange={e => updRow(i, "area", e.target.value)} style={{ ...s.inp, padding: "4px 6px", fontSize: 12 }} /></td>
+                  <td style={{ padding: "6px 10px" }}><LiveInput value={r.tarea} onChange={e => updRow(i, "tarea", e.target.value)} style={{ ...s.inp, padding: "4px 6px", fontSize: 12 }} /></td>
+                  <td style={{ padding: "6px 10px" }}><LiveInput value={r.responsable} onChange={e => updRow(i, "responsable", e.target.value)} style={{ ...s.inp, padding: "4px 6px", fontSize: 12 }} /></td>
+                  <td style={{ padding: "6px 10px" }}>
+                    <select value={r.prioridad} onChange={e => updRow(i, "prioridad", e.target.value)} style={{ ...s.inp, padding: "4px 6px", fontSize: 12 }}>
+                      {PRIORIDADES.map(p => <option key={p}>{p}</option>)}
+                    </select>
+                  </td>
+                  <td style={{ padding: "6px 10px", textAlign: "center" }}>
+                    <button onClick={() => delRow(i)} title="Eliminar" style={{ background: "transparent", border: "none", color: "#dc2626", cursor: "pointer", fontSize: 16, padding: "0 4px" }}>×</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div style={{ padding: 10, borderTop: "1px solid #e2e8f0", background: "#fafafa" }}>
+          <button onClick={addRow} style={{ background: "#fff", color: "#0369a1", border: "1px dashed #93c5fd", borderRadius: 8, padding: "10px", fontSize: 12, fontWeight: 700, cursor: "pointer", width: "100%" }}>+ Agregar tarea al frente {FRENTES.find(f => f.id === openFrente)?.name}</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export { initialData, initialDataBlank, defaultCondicionesVenta, defaultMachote };
+export default function Tracker({ data, setData, user, onLogout, project, onSwitchProject, machote, setMachote }) {
   const isMobile = useIsMobile();
   const importRef = useRef();
   const [section, setSection] = useState("resumen");
@@ -1721,7 +1824,7 @@ export default function Tracker({ data, setData, user, onLogout, project, onSwit
     e.target.value = "";
   };
 
-  const navItems = [{ id: "resumen", icon: "🏠", label: "Resumen" }, { id: "seguimiento", icon: "📊", label: "Seguimiento" }, { id: "maestros", icon: "📁", label: "Maestros" }, { id: "clientes", icon: "🏭", label: "Clientes" }];
+  const navItems = [{ id: "resumen", icon: "🏠", label: "Resumen" }, { id: "seguimiento", icon: "📊", label: "Seguimiento" }, { id: "maestros", icon: "📁", label: "Maestros" }, { id: "clientes", icon: "🏭", label: "Clientes" }, { id: "machote", icon: "📝", label: "Machote" }];
 
   return (
     <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#f1f5f9", color: "#0f172a", minHeight: "100vh", display: "flex", flexDirection: isMobile ? "column" : "row" }}>
@@ -1781,6 +1884,7 @@ export default function Tracker({ data, setData, user, onLogout, project, onSwit
           {section === "resumen" && <ResumenView data={data} isMobile={isMobile} onSelectFrente={goToFrente} />}
           {section === "seguimiento" && <SeguimientoView data={data} setData={setData} isMobile={isMobile} sub={seguimientoSub} setSub={setSeguimientoSub} project={project} />}
           {section === "maestros" && <MaestrosView data={data} setData={setData} isMobile={isMobile} />}
+          {section === "machote" && <MachoteView machote={machote} setMachote={setMachote} isMobile={isMobile} />}
           {section === "clientes" && <ClientesView data={data} setData={setData} isMobile={isMobile} project={project} />}
         </div>
       </main>

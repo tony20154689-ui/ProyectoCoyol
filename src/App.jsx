@@ -3,7 +3,7 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase.js";
 import Login from "./Login.jsx";
-import Tracker, { initialData, initialDataBlank, defaultCondicionesVenta } from "./Tracker.jsx";
+import Tracker, { initialData, initialDataBlank, defaultCondicionesVenta, defaultMachote } from "./Tracker.jsx";
 import ProjectSelector, { PROJECTS } from "./ProjectSelector.jsx";
 
 const DEBOUNCE_MS = 250;
@@ -50,6 +50,8 @@ const SyncIndicator = ({ status }) => {
   );
 };
 
+const MACHOTE_DOC = doc(db, "appData", "machote");
+
 export default function App() {
   const [user, setUser] = useState(undefined);
   const [project, setProject] = useState(() => {
@@ -57,6 +59,7 @@ export default function App() {
     return saved ? PROJECTS.find(p => p.id === saved) || null : null;
   });
   const [data, setDataLocal] = useState(null);
+  const [machote, setMachoteLocal] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [syncStatus, setSyncStatus] = useState("idle");
 
@@ -176,6 +179,44 @@ export default function App() {
     setData(prev => ({ ...prev, condicionesVenta: defaultCondicionesVenta() }));
   }, [data, user, project]);
 
+  // Shared machote doc — subscribed once user is authenticated (independent of project)
+  const machoteWriteTimer = useRef(null);
+  const machoteRef = useRef(null);
+  useEffect(() => {
+    if (!user) { setMachoteLocal(null); machoteRef.current = null; return; }
+    let seeded = false;
+    const unsub = onSnapshot(MACHOTE_DOC, async (s) => {
+      if (!s.exists()) {
+        if (seeded) return;
+        seeded = true;
+        try {
+          const seed = defaultMachote();
+          await setDoc(MACHOTE_DOC, { data: seed, updatedAt: serverTimestamp(), updatedBy: user.email || user.uid });
+        } catch (err) { console.error("No se pudo inicializar machote:", err); }
+        return;
+      }
+      const d = s.data();
+      if (!d?.data) return;
+      machoteRef.current = d.data;
+      setMachoteLocal(d.data);
+    }, (err) => console.error("Error leyendo machote:", err));
+    return () => unsub();
+  }, [user]);
+
+  const setMachote = (updater) => {
+    setMachoteLocal(prev => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      machoteRef.current = next;
+      if (machoteWriteTimer.current) clearTimeout(machoteWriteTimer.current);
+      machoteWriteTimer.current = setTimeout(async () => {
+        try {
+          await setDoc(MACHOTE_DOC, { data: machoteRef.current, updatedAt: serverTimestamp(), updatedBy: user?.email || user?.uid });
+        } catch (err) { console.error("Error guardando machote:", err); }
+      }, DEBOUNCE_MS);
+      return next;
+    });
+  };
+
   // One-time DEI bootstrap: Coyol only
   const bootstrapRanRef = useRef(false);
   useEffect(() => {
@@ -209,6 +250,8 @@ export default function App() {
         onLogout={() => signOut(auth)}
         project={project}
         onSwitchProject={switchProject}
+        machote={machote}
+        setMachote={setMachote}
       />
       <SyncIndicator status={syncStatus} />
     </>
