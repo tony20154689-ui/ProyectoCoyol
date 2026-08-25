@@ -154,12 +154,12 @@ export default function App() {
     return () => window.removeEventListener("beforeunload", handler);
   });
 
-  // SARO one-time migration: if clientes still uses Coyol's bodegaA/B/C schema, replace with D1-D6 grid
+  // SARO one-time migration: reseed clientes with the 35 Santa Rosa bodegas if not already
   const saroMigrationRanRef = useRef(false);
   useEffect(() => {
     if (!data || !user || !project || project.id !== "saro" || saroMigrationRanRef.current) return;
-    const hasD1 = data.clientes?.bodegaD1 !== undefined;
-    if (hasD1) return;
+    const has35 = data.clientes?.bodega35 !== undefined && data.clientes?.bodega1 !== undefined;
+    if (has35) return;
     saroMigrationRanRef.current = true;
     setData(prev => {
       const blank = initialDataBlank();
