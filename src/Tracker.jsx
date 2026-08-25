@@ -1421,6 +1421,31 @@ const ClientesView = ({ data, setData, isMobile, project }) => {
     const embedSrc = `https://maps.google.com/maps?q=${lat},${lng}&z=17&output=embed`;
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ background: "linear-gradient(135deg, #fefce8 0%, #fef3c7 100%)", borderRadius: 12, padding: isMobile ? 14 : 18, border: "1px solid #fde68a" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <div style={{ fontSize: 18 }}>💰</div>
+            <h3 style={{ margin: 0, fontSize: isMobile ? 14 : 15, fontWeight: 800, color: "#92400e" }}>Condiciones de Venta</h3>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
+            <div style={{ background: "#fff", borderRadius: 8, padding: 12, border: "1px solid #fde68a" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#0369a1", marginBottom: 6 }}>1. Sin broker</div>
+              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#334155", lineHeight: 1.55 }}>
+                <li>Base <strong>3%</strong> de comisiones netas</li>
+                <li><strong>1%</strong> de gastos fijos de formalización</li>
+                <li><strong>1.5%</strong> se reparte entre ambos</li>
+              </ul>
+            </div>
+            <div style={{ background: "#fff", borderRadius: 8, padding: 12, border: "1px solid #fde68a" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#0369a1", marginBottom: 6 }}>2. Con broker</div>
+              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#334155", lineHeight: 1.55 }}>
+                <li>Formalización <strong>1%</strong></li>
+                <li>Broker <strong>"X"</strong></li>
+                <li>Base <strong>4.5% − "X"</strong></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         <div style={{ background: "#fff", borderRadius: 12, padding: isMobile ? 16 : 20, border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
           <h2 style={{ margin: "0 0 4px", fontSize: isMobile ? 15 : 18, fontWeight: 800, color: "#0c4a6e" }}>Mapa del Proyecto — Asignación de Clientes</h2>
           <p style={{ margin: "0 0 12px", fontSize: 11, color: "#94a3b8" }}>Toca una bodega para ver y editar los datos del cliente</p>
