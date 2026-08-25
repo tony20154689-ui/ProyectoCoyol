@@ -1325,15 +1325,33 @@ const ClientesView = ({ data, setData, isMobile }) => {
   );
 };
 
-export { initialData };
-export default function Tracker({ data, setData, user, onLogout }) {
+const initialDataBlank = () => {
+  const d = initialData();
+  const blankTask = (t) => ({ ...t, estado: "Pendiente", avance: 0, notas: "", archivos: [] });
+  ["financiero", "legal", "fiscal", "permisologia", "comercializacion", "construccion", "entregas", "puesta"].forEach((k) => {
+    d[k] = (d[k] || []).map(blankTask);
+  });
+  d.bitacora = [];
+  d.maestros = { zen: [], dei: [], proyecto: [] };
+  d.clientes = {
+    bodegaA: { cliente: "", contacto: "", telefono: "", email: "", area: "", renta: "", plazo: "", inicioContrato: "", estado: "Disponible", notas: "", archivos: [] },
+    bodegaB: { cliente: "", contacto: "", telefono: "", email: "", area: "", renta: "", plazo: "", inicioContrato: "", estado: "Disponible", notas: "", archivos: [] },
+    bodegaC: { cliente: "", contacto: "", telefono: "", email: "", area: "", renta: "", plazo: "", inicioContrato: "", estado: "Disponible", notas: "", archivos: [] },
+  };
+  return d;
+};
+
+export { initialData, initialDataBlank };
+export default function Tracker({ data, setData, user, onLogout, project, onSwitchProject }) {
   const isMobile = useIsMobile();
   const importRef = useRef();
   const [section, setSection] = useState("resumen");
   const [seguimientoSub, setSeguimientoSub] = useState(FRENTES[0].id);
   const [toast, setToast] = useState("");
   const goToFrente = (id) => { setSeguimientoSub(id); setSection("seguimiento"); };
-  const resetData = () => { if (confirm("¿Restablecer datos originales? Esto sobrescribe lo guardado en la nube.")) setData(initialData()); };
+  const resetData = () => { if (confirm("¿Restablecer datos originales? Esto sobrescribe lo guardado en la nube.")) setData(project?.id === "saro" ? initialDataBlank() : initialData()); };
+  const brandName = project?.name || "BODEGAS COYOL";
+  const brandSubtitle = project?.subtitle || "Proyecto Bodegas Coyol · Grupo ZEN · Ganadera San Lorenzo, S.A.";
 
   const exportData = () => {
     const clean = JSON.parse(JSON.stringify(data));
@@ -1342,7 +1360,7 @@ export default function Tracker({ data, setData, user, onLogout }) {
     const blob = new Blob([JSON.stringify(exported, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `bodegas-coyol-backup-${new Date().toISOString().split("T")[0]}.json`; a.click();
+    a.href = url; a.download = `bodegas-${project?.id || "coyol"}-backup-${new Date().toISOString().split("T")[0]}.json`; a.click();
     URL.revokeObjectURL(url);
     setToast("✅ Datos exportados"); setTimeout(() => setToast(""), 2500);
   };
@@ -1381,7 +1399,7 @@ export default function Tracker({ data, setData, user, onLogout }) {
       {!isMobile && (
         <aside style={{ width: 210, background: "#fff", borderRight: "1px solid #e2e8f0", flexShrink: 0, display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "20px 16px 14px", borderBottom: "1px solid #e2e8f0" }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: "#0c4a6e", fontFamily: "'Outfit', sans-serif" }}>BODEGAS COYOL</div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "#0c4a6e", fontFamily: "'Outfit', sans-serif" }}>{brandName}</div>
             <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 2 }}>Tablero de Seguimiento</div>
           </div>
           <nav style={{ flex: 1, padding: "12px 8px" }}>
@@ -1393,6 +1411,7 @@ export default function Tracker({ data, setData, user, onLogout }) {
             <button onClick={exportData} style={{ background: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd", borderRadius: 6, padding: "8px 12px", fontSize: 11, cursor: "pointer", width: "100%", fontWeight: 600 }}>⬇ Exportar datos</button>
             <button onClick={() => importRef.current?.click()} style={{ background: "#f0fdf4", color: "#15803d", border: "1px solid #bbf7d0", borderRadius: 6, padding: "8px 12px", fontSize: 11, cursor: "pointer", width: "100%", fontWeight: 600 }}>⬆ Importar datos</button>
             <button onClick={resetData} style={{ background: "#f8fafc", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 6, padding: "8px 12px", fontSize: 11, cursor: "pointer", width: "100%", fontWeight: 600 }}>Restablecer datos</button>
+            {onSwitchProject && (<button onClick={onSwitchProject} style={{ background: "#fff", color: "#0369a1", border: "1px solid #bae6fd", borderRadius: 6, padding: "8px 12px", fontSize: 11, cursor: "pointer", width: "100%", fontWeight: 600 }}>⇄ Cambiar proyecto</button>)}
             {user && (<div style={{ marginTop: 6, paddingTop: 8, borderTop: "1px dashed #e2e8f0", fontSize: 10, color: "#64748b" }}>
               <div style={{ marginBottom: 6, wordBreak: "break-all" }}>👤 {user.email}</div>
               <button onClick={onLogout} style={{ background: "#fff", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: 6, padding: "6px 10px", fontSize: 10, cursor: "pointer", width: "100%", fontWeight: 600 }}>Cerrar sesión</button>
@@ -1405,15 +1424,16 @@ export default function Tracker({ data, setData, user, onLogout }) {
         <header style={{ padding: isMobile ? "10px 14px" : "14px 28px", borderBottom: "1px solid #e2e8f0", background: "rgba(255,255,255,0.9)", backdropFilter: "blur(12px)", position: "sticky", top: 0, zIndex: 50 }}>
           {isMobile ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div><div style={{ fontSize: 13, fontWeight: 800, color: "#0c4a6e", fontFamily: "'Outfit', sans-serif" }}>BODEGAS COYOL</div><div style={{ fontSize: 10, color: "#94a3b8" }}>{navItems.find(n=>n.id===section)?.label}</div></div>
+              <div><div style={{ fontSize: 13, fontWeight: 800, color: "#0c4a6e", fontFamily: "'Outfit', sans-serif" }}>{brandName}</div><div style={{ fontSize: 10, color: "#94a3b8" }}>{navItems.find(n=>n.id===section)?.label}</div></div>
               <div style={{ display: "flex", gap: 4 }}>
+                {onSwitchProject && (<button onClick={onSwitchProject} title="Cambiar proyecto" style={{ background: "#e0f2fe", color: "#0369a1", border: "none", borderRadius: 6, padding: "5px 8px", fontSize: 9, cursor: "pointer", fontWeight: 600 }}>⇄</button>)}
                 <button onClick={exportData} style={{ background: "#e0f2fe", color: "#0369a1", border: "none", borderRadius: 6, padding: "5px 8px", fontSize: 9, cursor: "pointer", fontWeight: 600 }}>⬇</button>
                 <button onClick={() => importRef.current?.click()} style={{ background: "#f0fdf4", color: "#15803d", border: "none", borderRadius: 6, padding: "5px 8px", fontSize: 9, cursor: "pointer", fontWeight: 600 }}>⬆</button>
               </div>
             </div>
           ) : (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div><h1 style={{ fontSize: 16, fontWeight: 800, color: "#0c4a6e", fontFamily: "'Outfit', sans-serif", margin: 0 }}>{navItems.find(n=>n.id===section)?.icon} {navItems.find(n=>n.id===section)?.label}</h1><p style={{ fontSize: 11, color: "#94a3b8", margin: "2px 0 0" }}>Proyecto Bodegas Coyol · Grupo ZEN · Ganadera San Lorenzo, S.A.</p></div>
+              <div><h1 style={{ fontSize: 16, fontWeight: 800, color: "#0c4a6e", fontFamily: "'Outfit', sans-serif", margin: 0 }}>{navItems.find(n=>n.id===section)?.icon} {navItems.find(n=>n.id===section)?.label}</h1><p style={{ fontSize: 11, color: "#94a3b8", margin: "2px 0 0" }}>{brandSubtitle}</p></div>
               <div style={{ fontSize: 11, color: "#94a3b8", fontFamily: "'DM Mono', monospace" }}>{new Date().toLocaleDateString("es-CR", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</div>
             </div>
           )}

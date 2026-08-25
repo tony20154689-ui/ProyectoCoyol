@@ -3,12 +3,13 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase.js";
 import Login from "./Login.jsx";
-import Tracker, { initialData } from "./Tracker.jsx";
+import Tracker, { initialData, initialDataBlank } from "./Tracker.jsx";
+import ProjectSelector, { PROJECTS } from "./ProjectSelector.jsx";
 
-const DOC_REF = doc(db, "appData", "main");
 const DEBOUNCE_MS = 250;
+const PROJECT_STORAGE_KEY = "activeProjectId";
 
-// One-time DEI Maestros bootstrap (auto-applies once, then flagged)
+// One-time DEI Maestros bootstrap (Coyol only, auto-applies once)
 const DEI_BOOTSTRAP_ITEMS = [
   { concepto: "Adelanto Estudio Vial", fecha: "2024-04-01", destino: "Consultores Viales S.A.", factura: "Factura 1686", usd: "1130", crc: "" },
   { concepto: "Adelanto 75% Renders Proyecto", fecha: "2024-07-31", destino: "GCG Estudio AD S.A.", factura: "Factura 178", usd: "1483.13", crc: "" },
@@ -51,6 +52,10 @@ const SyncIndicator = ({ status }) => {
 
 export default function App() {
   const [user, setUser] = useState(undefined);
+  const [project, setProject] = useState(() => {
+    const saved = typeof localStorage !== "undefined" ? localStorage.getItem(PROJECT_STORAGE_KEY) : null;
+    return saved ? PROJECTS.find(p => p.id === saved) || null : null;
+  });
   const [data, setDataLocal] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [syncStatus, setSyncStatus] = useState("idle");
@@ -63,18 +68,30 @@ export default function App() {
 
   useEffect(() => onAuthStateChanged(auth, (u) => setUser(u || null)), []);
 
+  const selectProject = (p) => {
+    setProject(p);
+    try { localStorage.setItem(PROJECT_STORAGE_KEY, p.id); } catch {}
+  };
+  const switchProject = () => {
+    try { localStorage.removeItem(PROJECT_STORAGE_KEY); } catch {}
+    setProject(null);
+    setDataLocal(null);
+    dataRef.current = null;
+  };
+
   useEffect(() => {
-    if (!user) { setDataLocal(null); dataRef.current = null; return; }
+    if (!user || !project) { setDataLocal(null); dataRef.current = null; return; }
+    const docRef = doc(db, "appData", project.docId);
     let seeded = false;
-    const unsub = onSnapshot(DOC_REF, async (s) => {
+    const unsub = onSnapshot(docRef, async (s) => {
       if (!s.exists()) {
         if (seeded) return;
         seeded = true;
         try {
-          const seed = initialData();
-          await setDoc(DOC_REF, { data: seed, updatedAt: serverTimestamp(), updatedBy: user.email || user.uid });
+          const seed = project.id === "saro" ? initialDataBlank() : initialData();
+          await setDoc(docRef, { data: seed, updatedAt: serverTimestamp(), updatedBy: user.email || user.uid });
         } catch (err) { setLoadError("No se pudo inicializar la base de datos: " + err.message); }
-        return; // next snapshot delivers the seeded data
+        return;
       }
       const d = s.data();
       if (!d?.data) return;
@@ -86,14 +103,14 @@ export default function App() {
       }
     }, (err) => setLoadError("Error leyendo datos: " + err.message));
     return () => unsub();
-  }, [user]);
+  }, [user, project]);
 
   const flushWrite = async () => {
-    if (!dataRef.current || !user) return;
+    if (!dataRef.current || !user || !project) return;
     writingRef.current = true;
     setSyncStatus("saving");
     try {
-      await setDoc(DOC_REF, {
+      await setDoc(doc(db, "appData", project.docId), {
         data: dataRef.current,
         updatedAt: serverTimestamp(),
         updatedBy: user.email || user.uid,
@@ -126,7 +143,6 @@ export default function App() {
     });
   };
 
-  // Flush pending write on tab close / navigation
   useEffect(() => {
     const handler = () => {
       if (writeTimer.current) {
@@ -138,10 +154,10 @@ export default function App() {
     return () => window.removeEventListener("beforeunload", handler);
   });
 
-  // One-time DEI bootstrap: runs once when data loads and flag not set
+  // One-time DEI bootstrap: Coyol only
   const bootstrapRanRef = useRef(false);
   useEffect(() => {
-    if (!data || !user || bootstrapRanRef.current) return;
+    if (!data || !user || !project || project.id !== "coyol" || bootstrapRanRef.current) return;
     if (data._migrations?.[DEI_BOOTSTRAP_FLAG]) return;
     bootstrapRanRef.current = true;
     setData(prev => {
@@ -154,16 +170,24 @@ export default function App() {
         _migrations: { ...(prev._migrations || {}), [DEI_BOOTSTRAP_FLAG]: new Date().toISOString() },
       };
     });
-  }, [data, user]);
+  }, [data, user, project]);
 
   if (user === undefined) return <Splash msg="Cargando…" />;
   if (!user) return <Login />;
+  if (!project) return <ProjectSelector user={user} onSelect={selectProject} />;
   if (loadError) return <Splash msg={loadError} />;
-  if (!data) return <Splash msg="Cargando datos del proyecto…" />;
+  if (!data) return <Splash msg={`Cargando datos de ${project.short}…`} />;
 
   return (
     <>
-      <Tracker data={data} setData={setData} user={user} onLogout={() => signOut(auth)} />
+      <Tracker
+        data={data}
+        setData={setData}
+        user={user}
+        onLogout={() => signOut(auth)}
+        project={project}
+        onSwitchProject={switchProject}
+      />
       <SyncIndicator status={syncStatus} />
     </>
   );
